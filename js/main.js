@@ -122,7 +122,7 @@
 
   function renderCurrentState() {
     if (!algo) return;
-    const { chars, brightness } = algo.getState();
+    const state = algo.getState();
     const fx = {
       scanlines: fxScanlines.checked,
       vignette: fxVignette.checked,
@@ -130,9 +130,9 @@
     };
     const AlgoClass = ALGORITHMS[algoSel.value];
     if (AlgoClass && AlgoClass.renderMode === 'pixel') {
-      engine.renderPixels(brightness, paletteSel.value, fx);
+      engine.renderPixels(state.brightness, paletteSel.value, fx, state.rgb || null);
     } else {
-      engine.render(chars, brightness, rampSel.value, paletteSel.value, fx);
+      engine.render(state.chars, state.brightness, rampSel.value, paletteSel.value, fx);
     }
   }
 

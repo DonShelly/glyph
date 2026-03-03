@@ -497,9 +497,14 @@ class ParticleSwirl {
 }
 
 // --- 8. Lorenz Dissolution ---
+// Matches gen-001-dissolution-v2.py exactly:
+//   - Classic X-Z butterfly projection, centred on canvas
+//   - Dissolution driven by SCREEN POSITION (top = clean, bottom = noisy)
+//   - Multi-pass accumulation (12 passes over 500K trajectory points)
+//   - Gamma 0.4 tone curve, 98th-percentile normalisation
 class LorenzDissolution {
   static label = 'Lorenz Dissolution';
-  static desc = 'Lorenz attractor dissolving into noise over time';
+  static desc = 'Lorenz attractor — dissolution increases toward the bottom';
   static prefPalette = 'warmwhite';
   static prefRamp = 'standard';
   static renderMode = 'pixel';
@@ -507,8 +512,9 @@ class LorenzDissolution {
     { key: 'sigma', label: 'Sigma', min: 5, max: 20, step: 0.5, def: 10 },
     { key: 'rho', label: 'Rho', min: 15, max: 40, step: 0.5, def: 28 },
     { key: 'beta', label: 'Beta', min: 1, max: 5, step: 0.1, def: 2.667 },
-    { key: 'noiseMax', label: 'Max Noise', min: 5, max: 80, step: 5, def: 40 },
-    { key: 'pointsPerFrame', label: 'Points/Frame', min: 500, max: 5000, step: 500, def: 2000 },
+    { key: 'dissolutionMax', label: 'Dissolution', min: 5, max: 80, step: 5, def: 35 },
+    { key: 'passes', label: 'Passes', min: 1, max: 16, step: 1, def: 12 },
+    { key: 'trajectoryK', label: 'Trajectory (K)', min: 100, max: 1000, step: 50, def: 500 },
   ];
 
   constructor(rows, cols, rng, nChars, params) {
@@ -517,78 +523,154 @@ class LorenzDissolution {
     this.sigma = p.sigma || 10;
     this.rho = p.rho || 28;
     this.beta = p.beta || 2.667;
-    this.noiseMax = p.noiseMax || 40;
-    this.pointsPerFrame = p.pointsPerFrame || 2000;
-    this.dt = 0.005;
-    this.x = 0.1; this.y = 0.0; this.z = 0.0;
-    this.totalPoints = 0;
-    this.maxPoints = 300000;
-    this.accum = new Float32Array(rows * cols);
-    // Phase: 0 = building the attractor, 1 = dissolving, 2 = done/looping
-    this.phase = 0;
+    this.dissolutionMax = p.dissolutionMax || 35;
+    this.numPasses = p.passes || 12;
+    this.trajectoryK = (p.trajectoryK || 500) * 1000;
+    this.dt = 0.003;
+
+    // Pre-compute the full Lorenz trajectory
+    this._computeTrajectory();
+    // Project to screen coords (undissolved)
+    this._projectToScreen();
+
+    // Accumulation buffer (per-channel for warm→cool gradient)
+    this.accumR = new Float32Array(rows * cols);
+    this.accumG = new Float32Array(rows * cols);
+    this.accumB = new Float32Array(rows * cols);
+
+    // Render state: which pass we're on, which point within that pass
+    this.currentPass = 0;
+    this.currentPoint = 0;
+    this.pointsPerFrame = 8000; // render speed
+    this.done = false;
+  }
+
+  _computeTrajectory() {
+    const { sigma, rho, beta, dt, trajectoryK } = this;
+    const n = trajectoryK;
+    this.trajX = new Float32Array(n);
+    this.trajZ = new Float32Array(n);
+    let x = 0.1, y = 0.0, z = 0.0;
+    for (let i = 0; i < n; i++) {
+      const dx = sigma * (y - x) * dt;
+      const dy = (x * (rho - z) - y) * dt;
+      const dz = (x * y - beta * z) * dt;
+      x += dx; y += dy; z += dz;
+      this.trajX[i] = x;
+      this.trajZ[i] = z;
+    }
+  }
+
+  _projectToScreen() {
+    const { rows, cols, trajX, trajZ } = this;
+    const n = trajX.length;
+    // Find bounds
+    let xMin = Infinity, xMax = -Infinity, zMin = Infinity, zMax = -Infinity;
+    for (let i = 0; i < n; i++) {
+      if (trajX[i] < xMin) xMin = trajX[i];
+      if (trajX[i] > xMax) xMax = trajX[i];
+      if (trajZ[i] < zMin) zMin = trajZ[i];
+      if (trajZ[i] > zMax) zMax = trajZ[i];
+    }
+    const margin = 0.06; // 6% margin on each side
+    const marginX = cols * margin;
+    const marginY = rows * margin;
+    const scaleX = (cols - 2 * marginX) / (xMax - xMin || 1);
+    const scaleY = (rows - 2 * marginY) / (zMax - zMin || 1);
+    const scale = Math.min(scaleX, scaleY);
+    const ox = (xMax + xMin) / 2;
+    const oy = (zMax + zMin) / 2;
+    const cx = cols / 2;
+    const cy = rows / 2;
+
+    this.screenX = new Float32Array(n);
+    this.screenY = new Float32Array(n);
+    for (let i = 0; i < n; i++) {
+      this.screenX[i] = (trajX[i] - ox) * scale + cx;
+      this.screenY[i] = -(trajZ[i] - oy) * scale + cy; // flip so high Z = top
+    }
   }
 
   step() {
-    const { rows, cols, rng, sigma, rho, beta, dt, noiseMax, accum } = this;
+    if (this.done) return;
+    const { rows, cols, rng, screenX, screenY, numPasses, dissolutionMax,
+            accumR, accumG, accumB } = this;
+    const n = screenX.length;
+    const brightnessPerPass = 0.15 / numPasses;
+    let budget = this.pointsPerFrame;
 
-    if (this.totalPoints >= this.maxPoints) {
-      // Dissolution complete — slow fade and restart
-      for (let i = 0; i < rows * cols; i++) accum[i] *= 0.992;
-      let sum = 0;
-      for (let i = 0; i < rows * cols; i++) sum += accum[i];
-      if (sum < 0.1) {
-        // Reset for next cycle
-        this.x = 0.1; this.y = 0.0; this.z = 0.0;
-        this.totalPoints = 0;
-        for (let i = 0; i < rows * cols; i++) accum[i] = 0;
+    while (budget > 0 && !this.done) {
+      const end = Math.min(this.currentPoint + budget, n);
+      for (let i = this.currentPoint; i < end; i++) {
+        let sx = screenX[i];
+        let sy = screenY[i];
+
+        // Dissolution based on screen Y position (0=top, 1=bottom)
+        const t = Math.max(0, Math.min(1, sy / rows));
+        const dissolution = Math.pow(t, 2.5) * dissolutionMax;
+
+        if (dissolution > 0.01) {
+          sx += rng.normal(0, dissolution);
+          sy += rng.normal(0, dissolution);
+        }
+
+        const px = Math.floor(sx);
+        const py = Math.floor(sy);
+        if (px >= 0 && px < cols && py >= 0 && py < rows) {
+          const idx = py * cols + px;
+          // Warm white at top, cooling to blue-grey at bottom
+          const warmth = 1.0 - t * 0.6;
+          accumR[idx] += brightnessPerPass * (0.95 + 0.05 * warmth);
+          accumG[idx] += brightnessPerPass * (0.90 + 0.05 * warmth);
+          accumB[idx] += brightnessPerPass * (0.85 + 0.15 * (1 - warmth));
+        }
       }
-      return;
-    }
+      budget -= (end - this.currentPoint);
+      this.currentPoint = end;
 
-    for (let p = 0; p < this.pointsPerFrame; p++) {
-      if (this.totalPoints >= this.maxPoints) break;
-
-      const dx = sigma * (this.y - this.x);
-      const dy = this.x * (rho - this.z) - this.y;
-      const dz = this.x * this.y - beta * this.z;
-      this.x += dx * dt;
-      this.y += dy * dt;
-      this.z += dz * dt;
-      this.totalPoints++;
-
-      const t = this.totalPoints / this.maxPoints;
-      const noiseScale = Math.pow(t, 3) * noiseMax;
-
-      const nx = this.x + rng.normal(0, noiseScale);
-      const nz = this.z + rng.normal(0, noiseScale);
-
-      // Classic butterfly view: X → horizontal, Z → vertical (inverted)
-      // Lorenz X range: roughly -20 to 20, Z range: roughly 5 to 48
-      const scaleX = cols / 50;
-      const scaleZ = rows / 55;
-      const px = Math.floor(cols / 2 + nx * scaleX);
-      const py = Math.floor(rows - 5 - nz * scaleZ);
-
-      if (px >= 0 && px < cols && py >= 0 && py < rows) {
-        const brightness = Math.max(0.05, 1.0 - t * 0.7);
-        accum[py * cols + px] += brightness * 0.08;
+      if (this.currentPoint >= n) {
+        this.currentPass++;
+        this.currentPoint = 0;
+        if (this.currentPass >= numPasses) {
+          this.done = true;
+        }
       }
     }
   }
 
   getState() {
-    const { accum, rows, cols, nChars } = this;
+    const { accumR, accumG, accumB, rows, cols, nChars } = this;
     const brightness = new Float32Array(rows * cols);
     const chars = new Int32Array(rows * cols);
-    let maxV = 0;
-    for (let i = 0; i < rows * cols; i++) if (accum[i] > maxV) maxV = accum[i];
-    const scale = maxV > 0 ? 1 / maxV : 1;
+    const rgb = new Uint8Array(rows * cols * 3);
+
+    // Find 98th percentile for each channel
+    const findP98 = (arr) => {
+      const vals = [];
+      for (let i = 0; i < arr.length; i++) if (arr[i] > 0) vals.push(arr[i]);
+      if (vals.length === 0) return 1;
+      vals.sort((a, b) => a - b);
+      return vals[Math.floor(vals.length * 0.98)] || 1;
+    };
+    const p98R = findP98(accumR);
+    const p98G = findP98(accumG);
+    const p98B = findP98(accumB);
+    const gamma = 0.4;
+
     for (let i = 0; i < rows * cols; i++) {
-      const v = Math.min(1, Math.pow(Math.min(1, accum[i] * scale), 0.35));
-      brightness[i] = v;
-      chars[i] = Math.min(nChars - 1, Math.max(0, Math.floor(v * (nChars - 1))));
+      const r = Math.pow(Math.min(1, accumR[i] / p98R), gamma);
+      const g = Math.pow(Math.min(1, accumG[i] / p98G), gamma);
+      const b = Math.pow(Math.min(1, accumB[i] / p98B), gamma);
+      // Luminance for character/brightness selection
+      const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+      brightness[i] = lum;
+      chars[i] = Math.min(nChars - 1, Math.max(0, Math.floor(lum * (nChars - 1))));
+      // Background: (5, 5, 12) blended with accumulation
+      rgb[i * 3]     = Math.floor(Math.min(255, 5 + r * 250));
+      rgb[i * 3 + 1] = Math.floor(Math.min(255, 5 + g * 250));
+      rgb[i * 3 + 2] = Math.floor(Math.min(255, 12 + b * 243));
     }
-    return { chars, brightness };
+    return { chars, brightness, rgb };
   }
 }
 

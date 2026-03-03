@@ -101,8 +101,14 @@
     const algo = new AlgoClass(rows, cols, rng, ramp.length, cfg.params || {});
 
     const warmUpSteps = isPixelMode ? 150 : 44;
-    for (let i = 0; i < warmUpSteps; i++) algo.step();
-    const { chars, brightness } = algo.getState();
+    if (algo.done !== undefined) {
+      // Static accumulation algorithm — run until complete
+      while (!algo.done) algo.step();
+    } else {
+      for (let i = 0; i < warmUpSteps; i++) algo.step();
+    }
+    const state = algo.getState();
+    const { chars, brightness } = state;
 
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, w, h);
@@ -113,7 +119,14 @@
           const idx = r * cols + c;
           const b = brightness[idx];
           if (b < 0.005) continue;
-          const [cr, cg, cb] = paletteFn(b);
+          let cr, cg, cb;
+          if (state.rgb) {
+            cr = state.rgb[idx * 3];
+            cg = state.rgb[idx * 3 + 1];
+            cb = state.rgb[idx * 3 + 2];
+          } else {
+            [cr, cg, cb] = paletteFn(b);
+          }
           ctx.fillStyle = `rgb(${cr},${cg},${cb})`;
           ctx.fillRect(c * charW, r * charH, charW, charH);
         }

@@ -115,7 +115,7 @@ class Engine {
     if (fx.vignette) this._applyVignette(ctx, canvas);
   }
 
-  renderPixels(brightness, paletteName, fx) {
+  renderPixels(brightness, paletteName, fx, rgb) {
     const { ctx, rows, cols, charW, charH } = this;
     const paletteFn = PALETTES[paletteName] || PALETTES.matrix;
 
@@ -130,7 +130,14 @@ class Engine {
         const b = brightness[idx];
         if (b < 0.005) continue;
 
-        const [cr, cg, cb] = paletteFn(b);
+        let cr, cg, cb;
+        if (rgb) {
+          cr = rgb[idx * 3];
+          cg = rgb[idx * 3 + 1];
+          cb = rgb[idx * 3 + 2];
+        } else {
+          [cr, cg, cb] = paletteFn(b);
+        }
         ctx.fillStyle = `rgb(${cr},${cg},${cb})`;
         ctx.fillRect(c * charW, r * charH, charW, charH);
       }

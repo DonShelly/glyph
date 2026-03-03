@@ -23,7 +23,7 @@
       "speed": 1,
       "seed": 42,
       "fx": { "scanlines": false, "vignette": true, "glow": false },
-      "params": { "sigma": 10, "rho": 28, "beta": 2.667, "noiseMax": 40, "pointsPerFrame": 2000 }
+      "params": { "sigma": 10, "rho": 28, "beta": 2.667, "dissolutionMax": 35, "passes": 12, "trajectoryK": 500 }
     }
   },
   {
