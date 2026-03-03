@@ -500,7 +500,7 @@ class ParticleSwirl {
 class LorenzDissolution {
   static label = 'Lorenz Dissolution';
   static desc = 'Lorenz attractor dissolving into noise over time';
-  static prefPalette = null;
+  static prefPalette = 'amber';
   static prefRamp = 'standard';
   static params = [
     { key: 'sigma', label: 'Sigma', min: 5, max: 20, step: 0.5, def: 10 },
@@ -523,14 +523,30 @@ class LorenzDissolution {
     this.totalPoints = 0;
     this.maxPoints = 300000;
     this.accum = new Float32Array(rows * cols);
+    // Phase: 0 = building the attractor, 1 = dissolving, 2 = done/looping
+    this.phase = 0;
   }
 
   step() {
     const { rows, cols, rng, sigma, rho, beta, dt, noiseMax, accum } = this;
-    // Fade existing accumulation slightly for animation
-    for (let i = 0; i < rows * cols; i++) accum[i] *= 0.998;
+
+    if (this.totalPoints >= this.maxPoints) {
+      // Dissolution complete — slow fade and restart
+      for (let i = 0; i < rows * cols; i++) accum[i] *= 0.992;
+      let sum = 0;
+      for (let i = 0; i < rows * cols; i++) sum += accum[i];
+      if (sum < 0.1) {
+        // Reset for next cycle
+        this.x = 0.1; this.y = 0.0; this.z = 0.0;
+        this.totalPoints = 0;
+        for (let i = 0; i < rows * cols; i++) accum[i] = 0;
+      }
+      return;
+    }
 
     for (let p = 0; p < this.pointsPerFrame; p++) {
+      if (this.totalPoints >= this.maxPoints) break;
+
       const dx = sigma * (this.y - this.x);
       const dy = this.x * (rho - this.z) - this.y;
       const dz = this.x * this.y - beta * this.z;
@@ -539,19 +555,22 @@ class LorenzDissolution {
       this.z += dz * dt;
       this.totalPoints++;
 
-      const t = Math.min(1, this.totalPoints / this.maxPoints);
+      const t = this.totalPoints / this.maxPoints;
       const noiseScale = Math.pow(t, 3) * noiseMax;
 
       const nx = this.x + rng.normal(0, noiseScale);
       const nz = this.z + rng.normal(0, noiseScale);
 
-      // Project: x → horizontal, time+z → vertical
-      const py = Math.floor(t * (rows - 20) + 10 + nz * 0.3);
-      const px = Math.floor(cols / 2 + nx * (cols / 60));
+      // Classic butterfly view: X → horizontal, Z → vertical (inverted)
+      // Lorenz X range: roughly -20 to 20, Z range: roughly 5 to 48
+      const scaleX = cols / 50;
+      const scaleZ = rows / 55;
+      const px = Math.floor(cols / 2 + nx * scaleX);
+      const py = Math.floor(rows - 5 - nz * scaleZ);
 
       if (px >= 0 && px < cols && py >= 0 && py < rows) {
         const brightness = Math.max(0.05, 1.0 - t * 0.7);
-        accum[py * cols + px] += brightness * 0.15;
+        accum[py * cols + px] += brightness * 0.08;
       }
     }
   }
