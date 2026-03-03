@@ -4,12 +4,14 @@ class UI {
   constructor() {
     this.paramContainer = document.getElementById('algoParams');
     this.paramValues = {};
+    this.controls = {};
     this.listeners = {};
   }
 
-  buildParams(algoClass) {
+  buildParams(algoClass, initialValues = null) {
     this.paramContainer.innerHTML = '';
     this.paramValues = {};
+    this.controls = {};
     const params = algoClass.params || [];
 
     if (params.length === 0) return;
@@ -22,6 +24,7 @@ class UI {
     for (const p of params) {
       const group = document.createElement('div');
       group.className = 'param-group';
+      const initial = initialValues && initialValues[p.key] != null ? initialValues[p.key] : p.def;
 
       if (p.type === 'select') {
         const label = document.createElement('label');
@@ -32,10 +35,12 @@ class UI {
         for (const opt of p.options) {
           const o = document.createElement('option');
           o.value = opt; o.textContent = opt.charAt(0).toUpperCase() + opt.slice(1);
-          if (opt === p.def) o.selected = true;
+          if (opt === initial) o.selected = true;
           sel.appendChild(o);
         }
-        this.paramValues[p.key] = p.def;
+        this.paramValues[p.key] = initial;
+        this.controls[p.key] = { type: 'select', el: sel };
+
         sel.addEventListener('change', () => {
           this.paramValues[p.key] = sel.value;
           this._emit('change');
@@ -43,7 +48,7 @@ class UI {
         group.appendChild(sel);
       } else {
         const valSpan = document.createElement('span');
-        valSpan.textContent = p.def;
+        valSpan.textContent = initial;
 
         const label = document.createElement('label');
         label.textContent = p.label + ' ';
@@ -52,8 +57,10 @@ class UI {
 
         const slider = document.createElement('input');
         slider.type = 'range';
-        slider.min = p.min; slider.max = p.max; slider.step = p.step; slider.value = p.def;
-        this.paramValues[p.key] = p.def;
+        slider.min = p.min; slider.max = p.max; slider.step = p.step; slider.value = initial;
+        this.paramValues[p.key] = Number(initial);
+        this.controls[p.key] = { type: 'range', el: slider, valueEl: valSpan };
+
         slider.addEventListener('input', () => {
           const v = parseFloat(slider.value);
           this.paramValues[p.key] = v;
@@ -65,6 +72,22 @@ class UI {
 
       this.paramContainer.appendChild(group);
     }
+  }
+
+  setParamValues(values = {}, emit = false) {
+    for (const [key, value] of Object.entries(values)) {
+      const ctl = this.controls[key];
+      if (!ctl) continue;
+      if (ctl.type === 'select') {
+        ctl.el.value = value;
+        this.paramValues[key] = value;
+      } else {
+        ctl.el.value = value;
+        ctl.valueEl.textContent = value;
+        this.paramValues[key] = Number(value);
+      }
+    }
+    if (emit) this._emit('change');
   }
 
   getParams() { return { ...this.paramValues }; }

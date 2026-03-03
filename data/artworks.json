@@ -1,0 +1,18 @@
+[
+  {
+    "id": "neon-rain-v1",
+    "title": "Neon Rain v1",
+    "description": "Default Matrix composition selected by Glyph.",
+    "presentation": { "mode": "animated" },
+    "defaultConfig": {
+      "algo": "matrix",
+      "palette": "matrix",
+      "ramp": "digital",
+      "fontSize": 14,
+      "speed": 1,
+      "seed": 4242,
+      "fx": { "scanlines": true, "vignette": true, "glow": false },
+      "params": { "density": 0.65, "maxSpeed": 1.4, "fadeRate": 0.9 }
+    }
+  }
+]
