@@ -674,34 +674,49 @@ class LorenzDissolution {
   }
 }
 
-// --- 9. Zone Plate Moiré ---
+// --- 9. Zone Plate Moiré ("Between Three Stones") ---
+// Exact port of gen-003-v3.py: 4 circle sources, binary XOR, colour-tinted
 class ZonePlateMoire {
   static renderMode = 'pixel';
   static label = 'Zone Plate Moiré';
-  static desc = 'Fresnel zone plate interference — phantom topography';
+  static desc = 'Binary XOR moiré — 4 circle sources with colour tinting';
   static prefPalette = 'ice';
   static prefRamp = 'standard';
   static params = [
-    { key: 'sources', label: 'Sources', min: 2, max: 6, step: 1, def: 3 },
-    { key: 'freqBase', label: 'Frequency', min: 30, max: 150, step: 5, def: 85 },
+    { key: 'sources', label: 'Sources', min: 2, max: 6, step: 1, def: 4 },
+    { key: 'freqBase', label: 'Frequency', min: 20, max: 100, step: 1, def: 32 },
     { key: 'drift', label: 'Drift Speed', min: 0, max: 0.02, step: 0.001, def: 0.003 },
   ];
 
   constructor(rows, cols, rng, nChars, params) {
     this.rows = rows; this.cols = cols; this.rng = rng; this.nChars = nChars;
     const p = params || {};
-    this.drift = p.drift || 0.003;
-    const nS = p.sources || 3;
-    const freqBase = p.freqBase || 85;
+    this.drift = p.drift ?? 0.003;
+    // Original piece: 4 specific sources with exact positions and frequencies
+    const defaultSources = [
+      { cx: -0.44, cy: -0.32, freq: 28 },
+      { cx:  0.40, cy: -0.12, freq: 35 },
+      { cx: -0.12, cy:  0.46, freq: 31 },
+      { cx:  0.18, cy: -0.42, freq: 33 },
+    ];
+    const nS = p.sources ?? 4;
+    const freqBase = p.freqBase ?? 32;
     this.sources = [];
     for (let i = 0; i < nS; i++) {
-      this.sources.push({
-        cx: rng.uniform(-0.4, 0.4),
-        cy: rng.uniform(-0.4, 0.4),
-        freq: freqBase + rng.uniform(-8, 8),
-        dx: rng.uniform(-1, 1),
-        dy: rng.uniform(-1, 1),
-      });
+      if (i < defaultSources.length && nS === 4 && freqBase === 32) {
+        // Use exact original positions
+        this.sources.push({
+          cx: defaultSources[i].cx, cy: defaultSources[i].cy,
+          freq: defaultSources[i].freq,
+          dx: rng.uniform(-1, 1), dy: rng.uniform(-1, 1),
+        });
+      } else {
+        this.sources.push({
+          cx: rng.uniform(-0.5, 0.5), cy: rng.uniform(-0.5, 0.5),
+          freq: freqBase + rng.uniform(-5, 5),
+          dx: rng.uniform(-1, 1), dy: rng.uniform(-1, 1),
+        });
+      }
     }
     this.t = 0;
   }
@@ -712,7 +727,6 @@ class ZonePlateMoire {
     for (const s of this.sources) {
       s.cx += s.dx * drift;
       s.cy += s.dy * drift;
-      // Bounce off edges
       if (Math.abs(s.cx) > 0.6) s.dx *= -1;
       if (Math.abs(s.cy) > 0.6) s.dy *= -1;
     }
@@ -722,41 +736,63 @@ class ZonePlateMoire {
     const { rows, cols, nChars, sources } = this;
     const brightness = new Float32Array(rows * cols);
     const chars = new Int32Array(rows * cols);
-    const cr = 1.5; // coordinate range
+    const rgb = new Uint8Array(rows * cols * 3);
+    const CR = 1.5;
 
-    let lo = Infinity, hi = -Infinity;
-    const field = new Float32Array(rows * cols);
+    // Colour endpoints matching original Python
+    const WARM  = [58, 30, 12];   // dark amber
+    const COOL  = [12, 22, 52];   // dark indigo
+    const PAPER = [248, 240, 225]; // warm cream
 
     for (let r = 0; r < rows; r++) {
-      const ny = -cr + (2 * cr * r) / rows;
+      const ny = -CR + (2 * CR * r) / rows;
       for (let c = 0; c < cols; c++) {
-        const nx = -cr + (2 * cr * c) / cols;
-        let v = 0;
+        const nx = -CR + (2 * CR * c) / cols;
+        const idx = r * cols + c;
+
+        // Compute smooth field (for colour tinting) and binary XOR
+        let smooth = 0;
+        let xorVal = 0;
         for (const s of sources) {
           const dx = nx - s.cx, dy = ny - s.cy;
-          v += Math.cos(s.freq * (dx * dx + dy * dy));
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          smooth += Math.cos(2 * Math.PI * s.freq * dist);
+          // Binary ring pattern: floor(r * freq * 2) % 2
+          const ring = Math.floor(dist * s.freq * 2) % 2;
+          xorVal ^= ring;
         }
-        field[r * cols + c] = v;
-        if (v < lo) lo = v;
-        if (v > hi) hi = v;
+
+        // Normalize smooth field per-frame (accumulate min/max)
+        // For simplicity, use tanh to map to [0,1]
+        const fn = 0.5 + 0.5 * Math.tanh(smooth * 0.3);
+        const fnTint = Math.pow(fn, 0.7);
+
+        if (xorVal === 1) {
+          // Ink: interpolate warm→cool based on smooth field
+          for (let ch = 0; ch < 3; ch++) {
+            rgb[idx * 3 + ch] = Math.floor(WARM[ch] + fnTint * (COOL[ch] - WARM[ch]));
+          }
+          brightness[idx] = 0.15; // dark ink
+        } else {
+          // Paper: warm cream
+          rgb[idx * 3]     = PAPER[0];
+          rgb[idx * 3 + 1] = PAPER[1];
+          rgb[idx * 3 + 2] = PAPER[2];
+          brightness[idx] = 0.95;
+        }
+        chars[idx] = Math.min(nChars - 1, Math.max(0, Math.floor(brightness[idx] * (nChars - 1))));
       }
     }
-
-    const range = hi - lo || 1;
-    for (let i = 0; i < rows * cols; i++) {
-      const d = (field[i] - lo) / range;
-      brightness[i] = d;
-      chars[i] = Math.min(nChars - 1, Math.max(0, Math.floor(d * (nChars - 1))));
-    }
-    return { chars, brightness };
+    return { chars, brightness, rgb };
   }
 }
 
-// --- 10. Flow Field (Prismatic Current) ---
+// --- 10. Flow Field ("Prismatic Current") ---
+// Exact port of gen-004-prismatic-current.py: sinusoidal flow field, spectral colour = direction
 class FlowField {
   static renderMode = 'pixel';
   static label = 'Flow Field';
-  static desc = 'Particle traces through a vector field — colour encodes direction';
+  static desc = 'Particle traces through a vector field — spectral colour encodes flow direction';
   static prefPalette = 'solar';
   static prefRamp = 'dots';
   static params = [
@@ -771,19 +807,26 @@ class FlowField {
     const p = params || {};
     this.stepSize = p.stepSize || 2.5;
     this.fadeRate = p.fadeRate || 0.995;
-    const complexity = p.complexity || 3;
     const nP = p.particles || 4000;
 
-    // Generate flow field coefficients
-    this.fieldCoeffs = [];
-    const nOctaves = Math.ceil(complexity * 2);
-    for (let i = 0; i < nOctaves; i++) {
-      this.fieldCoeffs.push({
-        ax: rng.uniform(2, 18), ay: rng.uniform(2, 18),
-        bx: rng.uniform(-2, 2), by: rng.uniform(-2, 2),
-        amp: 1.0 / (1 + i * 0.6),
-        phase: rng.uniform(0, Math.PI * 2),
-      });
+    // Pre-compute flow field on grid (exact sinusoidal octaves from original Python)
+    const GRID_RES = Math.min(200, Math.max(cols, rows));
+    this.gridRes = GRID_RES;
+    this.flowGrid = new Float32Array(GRID_RES * GRID_RES);
+    for (let gy = 0; gy < GRID_RES; gy++) {
+      const ny = gy / GRID_RES;
+      for (let gx = 0; gx < GRID_RES; gx++) {
+        const nx = gx / GRID_RES;
+        // Exact octaves from gen-004-prismatic-current.py
+        let angle = 0;
+        angle += 2.0 * Math.sin(nx * 3.7 + 0.3) * Math.cos(ny * 2.9 - 0.7);
+        angle += 1.2 * Math.sin(nx * 7.1 - ny * 5.3 + 1.2);
+        angle += 0.8 * Math.cos(nx * 4.8 + ny * 6.7 - 0.5);
+        angle += 0.5 * Math.sin(nx * 13.3 + ny * 11.7 + 2.1);
+        angle += 0.3 * Math.cos(nx * 17.9 - ny * 15.1 - 0.9);
+        angle += 0.4 * Math.sin(nx * 9.2 - ny * 8.4 + nx * ny * 3.0);
+        this.flowGrid[gy * GRID_RES + gx] = angle;
+      }
     }
 
     this.px = new Float32Array(nP);
@@ -792,29 +835,47 @@ class FlowField {
       this.px[i] = rng.uniform(0, cols);
       this.py[i] = rng.uniform(0, rows);
     }
-    this.accum = new Float32Array(rows * cols);
+    // RGB accumulation buffers (not just brightness)
+    this.accumR = new Float32Array(rows * cols);
+    this.accumG = new Float32Array(rows * cols);
+    this.accumB = new Float32Array(rows * cols);
+    this.stepCount = new Float32Array(nP); // track age per particle
+    this.maxSteps = 200;
   }
 
-  _flowAngle(nx, ny) {
-    let angle = 0;
-    for (const c of this.fieldCoeffs) {
-      angle += c.amp * Math.sin(nx * c.ax + ny * c.ay + c.bx + c.phase);
-      angle += c.amp * 0.5 * Math.cos(nx * c.ay + ny * c.ax + c.by);
-    }
-    return angle;
+  _getFlow(px, py) {
+    const gx = Math.min(this.gridRes - 1, Math.max(0, Math.floor(px / this.cols * this.gridRes)));
+    const gy = Math.min(this.gridRes - 1, Math.max(0, Math.floor(py / this.rows * this.gridRes)));
+    return this.flowGrid[gy * this.gridRes + gx];
+  }
+
+  _hsvToRgb(h, s, v) {
+    const i = Math.floor(h * 6) % 6;
+    const f = h * 6 - Math.floor(h * 6);
+    const p = v * (1 - s), q = v * (1 - f * s), t = v * (1 - (1 - f) * s);
+    let r, g, b;
+    if (i === 0) { r = v; g = t; b = p; }
+    else if (i === 1) { r = q; g = v; b = p; }
+    else if (i === 2) { r = p; g = v; b = t; }
+    else if (i === 3) { r = p; g = q; b = v; }
+    else if (i === 4) { r = t; g = p; b = v; }
+    else { r = v; g = p; b = q; }
+    return [r, g, b];
   }
 
   step() {
-    const { rows, cols, rng, px, py, accum, stepSize, fadeRate } = this;
+    const { rows, cols, px, py, accumR, accumG, accumB, stepSize, stepCount, maxSteps, rng } = this;
     const nP = px.length;
 
-    // Fade
-    for (let i = 0; i < rows * cols; i++) accum[i] *= fadeRate;
-
     for (let i = 0; i < nP; i++) {
-      const nx = px[i] / cols;
-      const ny = py[i] / rows;
-      const angle = this._flowAngle(nx, ny);
+      if (stepCount[i] >= maxSteps) {
+        // Reset particle
+        px[i] = rng.uniform(0, cols);
+        py[i] = rng.uniform(0, rows);
+        stepCount[i] = 0;
+      }
+
+      const angle = this._getFlow(px[i], py[i]);
 
       px[i] += Math.cos(angle) * stepSize;
       py[i] += Math.sin(angle) * stepSize;
@@ -828,40 +889,68 @@ class FlowField {
       const ix = Math.floor(px[i]) % cols;
       const iy = Math.floor(py[i]) % rows;
       if (ix >= 0 && iy >= 0 && ix < cols && iy < rows) {
-        accum[iy * cols + ix] += 0.04;
+        // Spectral colour from direction (hue = angle)
+        const hue = ((angle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI) / (2 * Math.PI);
+        const sat = 0.75 + 0.2 * Math.sin(stepCount[i] * 0.05);
+        const [r, g, b] = this._hsvToRgb(hue, sat, 1.0);
+        const ageFactor = 1.0 - (stepCount[i] / maxSteps) * 0.3;
+        const bright = 0.012 * ageFactor;
+        const idx = iy * cols + ix;
+        accumR[idx] += r * bright * 255;
+        accumG[idx] += g * bright * 255;
+        accumB[idx] += b * bright * 255;
       }
+      stepCount[i]++;
     }
   }
 
   getState() {
-    const { accum, rows, cols, nChars } = this;
+    const { accumR, accumG, accumB, rows, cols, nChars } = this;
     const brightness = new Float32Array(rows * cols);
     const chars = new Int32Array(rows * cols);
-    let maxV = 0;
-    for (let i = 0; i < rows * cols; i++) if (accum[i] > maxV) maxV = accum[i];
-    const scale = maxV > 0 ? 1 / maxV : 1;
+    const rgb = new Uint8Array(rows * cols * 3);
+
+    // Find 97th percentile for tone mapping (matching Python)
+    const findP97 = (arr) => {
+      const vals = [];
+      for (let i = 0; i < arr.length; i++) if (arr[i] > 0) vals.push(arr[i]);
+      if (vals.length === 0) return 1;
+      vals.sort((a, b) => a - b);
+      return vals[Math.floor(vals.length * 0.97)] || 1;
+    };
+    const p97R = findP97(accumR), p97G = findP97(accumG), p97B = findP97(accumB);
+    const gamma = 0.45;
+    const BG = [3, 3, 8];
+
     for (let i = 0; i < rows * cols; i++) {
-      const v = Math.min(1, Math.pow(Math.min(1, accum[i] * scale), 0.5));
-      brightness[i] = v;
-      chars[i] = Math.min(nChars - 1, Math.max(0, Math.floor(v * (nChars - 1))));
+      const r = Math.pow(Math.min(1, accumR[i] / p97R), gamma);
+      const g = Math.pow(Math.min(1, accumG[i] / p97G), gamma);
+      const b = Math.pow(Math.min(1, accumB[i] / p97B), gamma);
+      const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+      brightness[i] = lum;
+      chars[i] = Math.min(nChars - 1, Math.max(0, Math.floor(lum * (nChars - 1))));
+      rgb[i * 3]     = Math.floor(Math.min(255, BG[0] + r * (255 - BG[0])));
+      rgb[i * 3 + 1] = Math.floor(Math.min(255, BG[1] + g * (255 - BG[1])));
+      rgb[i * 3 + 2] = Math.floor(Math.min(255, BG[2] + b * (255 - BG[2])));
     }
-    return { chars, brightness };
+    return { chars, brightness, rgb };
   }
 }
 
-// --- 11. Taxonomy (Spatially Varying Reaction-Diffusion) ---
+// --- 11. Taxonomy ("Taxonomy of Possible Forms") ---
+// Exact port of gen-002-taxonomy-v3.py: tight parameter range, weighted 9-neighbor laplacian, gold-on-navy
 class TaxonomyRD {
   static renderMode = 'pixel';
   static pixelSize = 2;
   static label = 'Taxonomy RD';
-  static desc = 'Gray-Scott with spatially varying parameters — a map of morphogenesis';
+  static desc = 'Gray-Scott with spatially varying parameters — spots → worms → labyrinths';
   static prefPalette = 'amber';
   static prefRamp = 'dense';
   static params = [
-    { key: 'fMin', label: 'Feed min', min: 0.005, max: 0.04, step: 0.005, def: 0.01 },
-    { key: 'fMax', label: 'Feed max', min: 0.04, max: 0.09, step: 0.005, def: 0.08 },
-    { key: 'kMin', label: 'Kill min', min: 0.03, max: 0.055, step: 0.005, def: 0.045 },
-    { key: 'kMax', label: 'Kill max', min: 0.055, max: 0.08, step: 0.005, def: 0.07 },
+    { key: 'fMin', label: 'Feed min', min: 0.005, max: 0.05, step: 0.005, def: 0.030 },
+    { key: 'fMax', label: 'Feed max', min: 0.03, max: 0.09, step: 0.005, def: 0.055 },
+    { key: 'kMin', label: 'Kill min', min: 0.04, max: 0.065, step: 0.001, def: 0.057 },
+    { key: 'kMax', label: 'Kill max', min: 0.055, max: 0.08, step: 0.001, def: 0.067 },
     { key: 'stepsPerFrame', label: 'Sim Speed', min: 4, max: 30, step: 2, def: 16 },
   ];
 
@@ -871,42 +960,70 @@ class TaxonomyRD {
     this.Du = 1.0; this.Dv = 0.5;
     this.stepsPerFrame = p.stepsPerFrame || 16;
 
-    const fMin = p.fMin || 0.01, fMax = p.fMax || 0.08;
-    const kMin = p.kMin || 0.045, kMax = p.kMax || 0.07;
+    // Tight range matching v3 Python — entire canvas in pattern-forming zone
+    const fMin = p.fMin ?? 0.030, fMax = p.fMax ?? 0.055;
+    const kMin = p.kMin ?? 0.057, kMax = p.kMax ?? 0.067;
 
     this.F = new Float32Array(rows * cols);
     this.K = new Float32Array(rows * cols);
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
         const i = r * cols + c;
-        this.F[i] = fMin + (fMax - fMin) * (r / rows) + rng.normal(0, 0.0005);
-        this.K[i] = kMin + (kMax - kMin) * (c / cols) + rng.normal(0, 0.0003);
+        // f varies vertically, k varies horizontally (matching Python)
+        this.F[i] = fMin + (fMax - fMin) * (r / rows) + rng.normal(0, 0.0002);
+        this.K[i] = kMin + (kMax - kMin) * (c / cols) + rng.normal(0, 0.0001);
       }
     }
 
     this.U = new Float32Array(rows * cols).fill(1);
     this.V = new Float32Array(rows * cols);
 
-    // Seed patches
-    const nSeeds = rng.int(8, 20);
+    // Seed ~80 circular patches (matching Python seed=13 with 80 patches, radius 3-7)
+    const nSeeds = 80;
     for (let s = 0; s < nSeeds; s++) {
-      const sr = rng.int(10, rows - 10);
-      const sc = rng.int(10, cols - 10);
-      const rad = rng.int(2, 5);
-      for (let r = Math.max(0, sr - rad); r < Math.min(rows, sr + rad); r++) {
-        for (let c2 = Math.max(0, sc - rad); c2 < Math.min(cols, sc + rad); c2++) {
-          this.V[r * cols + c2] = 1;
-          this.U[r * cols + c2] = 0;
+      const sr = rng.int(15, rows - 15);
+      const sc = rng.int(15, cols - 15);
+      const rad = rng.int(3, 8);
+      for (let dr = -rad; dr <= rad; dr++) {
+        for (let dc = -rad; dc <= rad; dc++) {
+          if (dr * dr + dc * dc <= rad * rad) {
+            const nr = sr + dr, nc = sc + dc;
+            if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+              const idx = nr * cols + nc;
+              this.V[idx] = 1;
+              this.U[idx] = 0;
+            }
+          }
         }
       }
     }
   }
 
+  // Weighted 9-neighbor Laplacian matching Python's version
+  _laplacian9(field) {
+    const { rows, cols } = this;
+    const L = new Float32Array(rows * cols);
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const i = r * cols + c;
+        const rp = r > 0 ? r - 1 : rows - 1;
+        const rn = r < rows - 1 ? r + 1 : 0;
+        const cp = c > 0 ? c - 1 : cols - 1;
+        const cn = c < cols - 1 ? c + 1 : 0;
+        // -1*center + 0.2*cardinal + 0.05*diagonal
+        L[i] = -field[i]
+          + 0.2 * (field[rp * cols + c] + field[rn * cols + c] + field[r * cols + cp] + field[r * cols + cn])
+          + 0.05 * (field[rp * cols + cp] + field[rp * cols + cn] + field[rn * cols + cp] + field[rn * cols + cn]);
+      }
+    }
+    return L;
+  }
+
   step() {
     const { rows, cols, U, V, F, K, Du, Dv, stepsPerFrame } = this;
     for (let s = 0; s < stepsPerFrame; s++) {
-      const Lu = laplacian(U, rows, cols);
-      const Lv = laplacian(V, rows, cols);
+      const Lu = this._laplacian9(U);
+      const Lv = this._laplacian9(V);
       for (let i = 0; i < rows * cols; i++) {
         const uvv = U[i] * V[i] * V[i];
         U[i] = Math.min(1, Math.max(0, U[i] + Du * Lu[i] - uvv + F[i] * (1 - U[i])));
@@ -917,19 +1034,53 @@ class TaxonomyRD {
 
   getState() {
     const { V, rows, cols, nChars } = this;
+    const brightness = new Float32Array(rows * cols);
     const chars = new Int32Array(rows * cols);
-    for (let i = 0; i < rows * cols; i++) {
-      chars[i] = Math.min(nChars - 1, Math.max(0, Math.floor(V[i] * (nChars - 1))));
+    const rgb = new Uint8Array(rows * cols * 3);
+
+    // Gold-on-navy colour matching Python v3
+    // Deep indigo background: (5, 4, 18) ~ base * 255
+    // Structure: cool silver-blue → warm amber across diagonal
+    let vMax = 0;
+    for (let i = 0; i < rows * cols; i++) if (V[i] > vMax) vMax = V[i];
+    if (vMax < 0.001) vMax = 1;
+
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const i = r * cols + c;
+        const lum = V[i] / vMax;
+        const lumG = Math.pow(Math.min(1, lum), 0.8); // gamma matching Python
+
+        // Diagonal warmth gradient
+        const warmth = (r / rows + c / cols) / 2.0;
+        const sr = 0.70 + 0.25 * warmth;
+        const sg = 0.68 + 0.10 * warmth;
+        const sb = 0.62 - 0.35 * warmth;
+
+        // Base (deep indigo)
+        const br = 0.02, bg = 0.015, bb = 0.07;
+
+        const finalR = br + lumG * sr;
+        const finalG = bg + lumG * sg;
+        const finalB = bb + lumG * sb;
+
+        brightness[i] = lumG;
+        chars[i] = Math.min(nChars - 1, Math.max(0, Math.floor(lumG * (nChars - 1))));
+        rgb[i * 3]     = Math.floor(Math.min(255, finalR * 255));
+        rgb[i * 3 + 1] = Math.floor(Math.min(255, finalG * 255));
+        rgb[i * 3 + 2] = Math.floor(Math.min(255, finalB * 255));
+      }
     }
-    return { chars, brightness: V };
+    return { chars, brightness, rgb };
   }
 }
 
-// --- 12. DLA Filament ---
+// --- 12. DLA Filament ("Filament") ---
+// Port of gen-005-filament.py: DLA with ember chronology colour + distance field glow
 class DLAFilament {
   static renderMode = 'pixel';
   static label = 'DLA Filament';
-  static desc = 'Diffusion-limited aggregation — dendritic growth from a seed';
+  static desc = 'Diffusion-limited aggregation — ember core to incandescent tips';
   static prefPalette = 'fire';
   static prefRamp = 'dense';
   static params = [
@@ -938,6 +1089,45 @@ class DLAFilament {
     { key: 'glowRadius', label: 'Glow Radius', min: 1, max: 6, step: 1, def: 3 },
   ];
 
+  // Ember palette matching gen-005-filament.py
+  // t=0 (core, oldest) → t=1 (tips, newest)
+  static _emberStops = {
+    t: [0.00, 0.08, 0.20, 0.35, 0.50, 0.65, 0.78, 0.88, 0.95, 1.00],
+    h: [0.000, 0.002, 0.005, 0.010, 0.025, 0.050, 0.080, 0.110, 0.125, 0.130],
+    s: [0.80, 0.82, 0.85, 0.88, 0.90, 0.88, 0.80, 0.60, 0.35, 0.15],
+    v: [0.35, 0.40, 0.48, 0.56, 0.65, 0.76, 0.86, 0.93, 0.97, 1.00],
+  };
+
+  static _interpEmber(t) {
+    const s = DLAFilament._emberStops;
+    t = Math.max(0, Math.min(1, t));
+    // Find segment
+    let idx = 0;
+    for (let i = 0; i < s.t.length - 1; i++) {
+      if (t >= s.t[i] && t <= s.t[i + 1]) { idx = i; break; }
+      if (i === s.t.length - 2) idx = i;
+    }
+    const frac = (t - s.t[idx]) / (s.t[idx + 1] - s.t[idx] || 1);
+    const h = (s.h[idx] + frac * (s.h[idx + 1] - s.h[idx])) % 1;
+    const sat = s.s[idx] + frac * (s.s[idx + 1] - s.s[idx]);
+    const val = s.v[idx] + frac * (s.v[idx + 1] - s.v[idx]);
+
+    // HSV → RGB
+    const c = val * sat;
+    const h6 = h * 6;
+    const x = c * (1 - Math.abs(h6 % 2 - 1));
+    const m = val - c;
+    let r, g, b;
+    const i = Math.floor(h6) % 6;
+    if (i === 0) { r = c; g = x; b = 0; }
+    else if (i === 1) { r = x; g = c; b = 0; }
+    else if (i === 2) { r = 0; g = c; b = x; }
+    else if (i === 3) { r = 0; g = x; b = c; }
+    else if (i === 4) { r = x; g = 0; b = c; }
+    else { r = c; g = 0; b = x; }
+    return [(r + m) * 255, (g + m) * 255, (b + m) * 255];
+  }
+
   constructor(rows, cols, rng, nChars, params) {
     this.rows = rows; this.cols = cols; this.rng = rng; this.nChars = nChars;
     const p = params || {};
@@ -945,8 +1135,8 @@ class DLAFilament {
     this.stickProb = p.stickProb || 0.6;
     this.glowRadius = p.glowRadius || 3;
 
-    this.grid = new Uint8Array(rows * cols); // 1 = occupied
-    this.order = new Float32Array(rows * cols); // arrival order for colouring
+    this.grid = new Uint8Array(rows * cols);
+    this.order = new Float32Array(rows * cols);
     this.totalStuck = 0;
 
     // Seed at centre
@@ -956,6 +1146,12 @@ class DLAFilament {
     this.totalStuck = 1;
 
     this.brightness = new Float32Array(rows * cols);
+    // Per-pixel nearest-aggregate order (for colour) and distance (for glow)
+    this.nearestOrder = new Float32Array(rows * cols);
+    this.nearestDist = new Float32Array(rows * cols).fill(9999);
+    // Set seed distance to 0
+    this.nearestDist[cr * cols + cc] = 0;
+    this.nearestOrder[cr * cols + cc] = 0;
   }
 
   _isAdjacentToOccupied(r, c) {
@@ -969,10 +1165,11 @@ class DLAFilament {
   }
 
   step() {
-    const { rows, cols, rng, grid, order, walkersPerFrame, stickProb, glowRadius } = this;
+    const { rows, cols, rng, grid, order, walkersPerFrame, stickProb, glowRadius,
+            nearestOrder, nearestDist } = this;
+    const DECAY = 0.22;
 
     for (let w = 0; w < walkersPerFrame; w++) {
-      // Start from random edge
       let r, c;
       if (rng.random() < 0.5) {
         r = rng.int(0, rows);
@@ -982,31 +1179,29 @@ class DLAFilament {
         c = rng.int(0, cols);
       }
 
-      // Random walk max steps
       for (let s = 0; s < 500; s++) {
         const dir = rng.int(0, 4);
-        if (dir === 0) r--;
-        else if (dir === 1) r++;
-        else if (dir === 2) c--;
-        else c++;
-
+        if (dir === 0) r--; else if (dir === 1) r++; else if (dir === 2) c--; else c++;
         if (r < 0 || r >= rows || c < 0 || c >= cols) break;
-        if (grid[r * cols + c]) break; // landed on occupied, try again
+        if (grid[r * cols + c]) break;
 
         if (this._isAdjacentToOccupied(r, c) && rng.random() < stickProb) {
           grid[r * cols + c] = 1;
           this.totalStuck++;
           order[r * cols + c] = this.totalStuck;
 
-          // Add glow around new particle
-          for (let dr = -glowRadius; dr <= glowRadius; dr++) {
-            for (let dc = -glowRadius; dc <= glowRadius; dc++) {
+          // Update distance field around new particle
+          const updateR = glowRadius + 8;
+          for (let dr = -updateR; dr <= updateR; dr++) {
+            for (let dc = -updateR; dc <= updateR; dc++) {
               const nr = r + dr, nc = c + dc;
               if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
                 const dist = Math.sqrt(dr * dr + dc * dc);
-                const glow = 1.0 / (1.0 + dist * 0.8);
                 const idx = nr * cols + nc;
-                this.brightness[idx] = Math.min(1, this.brightness[idx] + glow * 0.3);
+                if (dist < nearestDist[idx]) {
+                  nearestDist[idx] = dist;
+                  nearestOrder[idx] = this.totalStuck;
+                }
               }
             }
           }
@@ -1015,23 +1210,39 @@ class DLAFilament {
       }
     }
 
-    // Slow fade so structure accumulates visually
+    // Update brightness from distance field
+    const AMBIENT = 0.06;
     for (let i = 0; i < rows * cols; i++) {
-      if (grid[i]) {
-        this.brightness[i] = Math.min(1, this.brightness[i] + 0.02);
-      } else {
-        this.brightness[i] *= 0.997;
-      }
+      const d = nearestDist[i];
+      let b = 1.0 / (1.0 + d * DECAY);
+      const ambient = AMBIENT * Math.max(0, 1.0 - d * 0.03);
+      b = Math.max(b, ambient);
+      this.brightness[i] = Math.pow(Math.min(1, b), 0.85);
     }
   }
 
   getState() {
-    const { brightness, rows, cols, nChars } = this;
+    const { brightness, nearestOrder, totalStuck, rows, cols, nChars, grid } = this;
     const chars = new Int32Array(rows * cols);
+    const rgb = new Uint8Array(rows * cols * 3);
+    const BG = [3, 3, 8];
+    const maxOrder = Math.max(1, totalStuck);
+
     for (let i = 0; i < rows * cols; i++) {
-      chars[i] = Math.min(nChars - 1, Math.max(0, Math.floor(brightness[i] * (nChars - 1))));
+      const b = brightness[i];
+      chars[i] = Math.min(nChars - 1, Math.max(0, Math.floor(b * (nChars - 1))));
+
+      // Chronology colour: t=0 core (oldest), t=1 tips (newest)
+      const t = nearestOrder[i] / maxOrder;
+      const [er, eg, eb] = DLAFilament._interpEmber(t);
+
+      // Blend ember colour with brightness
+      const bgW = Math.max(0, 1.0 - b);
+      rgb[i * 3]     = Math.floor(Math.min(255, BG[0] * bgW + er * b));
+      rgb[i * 3 + 1] = Math.floor(Math.min(255, BG[1] * bgW + eg * b));
+      rgb[i * 3 + 2] = Math.floor(Math.min(255, BG[2] * bgW + eb * b));
     }
-    return { chars, brightness };
+    return { chars, brightness, rgb };
   }
 }
 
