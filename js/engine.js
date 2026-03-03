@@ -33,8 +33,8 @@ class Engine {
     this.fontSize = fontSize;
     this.pixelMode = !!options.pixelMode;
     if (this.pixelMode) {
-      // For pixel rendering, use small cells (3px) for high resolution
-      const pxSize = options.pixelSize || 3;
+      // Use algorithm-preferred pixel size, default 1 for full resolution
+      const pxSize = options.pixelSize || 1;
       this.charW = pxSize;
       this.charH = pxSize;
     } else {

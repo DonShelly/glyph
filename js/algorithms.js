@@ -770,6 +770,7 @@ class FlowField {
 // --- 11. Taxonomy (Spatially Varying Reaction-Diffusion) ---
 class TaxonomyRD {
   static renderMode = 'pixel';
+  static pixelSize = 2;
   static label = 'Taxonomy RD';
   static desc = 'Gray-Scott with spatially varying parameters — a map of morphogenesis';
   static prefPalette = 'amber';

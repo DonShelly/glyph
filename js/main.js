@@ -143,7 +143,8 @@
     const algoNameForSetup = algoSel.value;
     const AlgoClassForSetup = ALGORITHMS[algoNameForSetup];
     const isPixelMode = AlgoClassForSetup && AlgoClassForSetup.renderMode === 'pixel';
-    const { rows, cols } = engine.setup(fontSize, { aspectRatio: ratio, pixelMode: isPixelMode });
+    const algoPxSize = (AlgoClassForSetup && AlgoClassForSetup.pixelSize) || 1;
+    const { rows, cols } = engine.setup(fontSize, { aspectRatio: ratio, pixelMode: isPixelMode, pixelSize: algoPxSize });
 
     const algoName = algoSel.value;
     const AlgoClass = ALGORITHMS[algoName];
