@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Glyph Artwork</title>
+  <link rel="stylesheet" href="detail.css">
+</head>
+<body>
+  <div class="layout">
+    <div id="stage" class="stage">
+      <img id="artworkImage" alt="Artwork" hidden>
+      <canvas id="canvas" hidden></canvas>
+    </div>
+    <aside class="panel">
+      <a class="back" href="/">← Gallery</a>
+      <h1 id="title">Artwork</h1>
+      <p id="description" class="description"></p>
+      <div id="analysis" class="analysis"></div>
+
+      <a id="playgroundLink" class="cta" href="#">Open in full-screen playground</a>
+    </aside>
+  </div>
+
+  <script src="js/rng.js"></script>
+  <script src="js/algorithms.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/detail.js"></script>
+</body>
+</html>

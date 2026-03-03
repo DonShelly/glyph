@@ -1,9 +1,179 @@
 [
   {
+    "id": "2026-03-01-dissolution",
+    "title": "Dissolution",
+    "description": "First piece. Butterfly shape reads clearly, dissolution effect works. Two dark eyes at centre of each wing are unexpectedly evocative. Transition slightly abrupt mid-section.",
+    "analysisText": "Technique: Lorenz attractor with progressive Gaussian dissolution, 500K points, 12-pass accumulation. Self-score: 7/10.",
+    "generated": "2026-03-01T12:00:00",
+    "imageUrl": "/gallery/2026-03-01-dissolution.png",
+    "source": "original",
+    "presentation": {
+      "mode": "still",
+      "width": 2400,
+      "height": 2400
+    }
+  },
+  {
+    "id": "2026-03-02-taxonomy",
+    "title": "Taxonomy of Possible Forms",
+    "description": "Concept works but solid region wastes ~40% of canvas. The crescent boundary is the interesting part.",
+    "analysisText": "Technique: Gray-Scott reaction-diffusion with spatially varying f and k. Self-score: 6/10.",
+    "generated": "2026-03-02T12:00:00",
+    "imageUrl": "/gallery/2026-03-02-taxonomy.png",
+    "source": "original",
+    "presentation": {
+      "mode": "still",
+      "width": 2400,
+      "height": 2400
+    }
+  },
+  {
+    "id": "2026-03-02-between-three-stones",
+    "title": "Between Three Stones",
+    "description": "Sweeping moir\u00e9 arcs are dramatic. Centre is hypnotic. Copperplate engraving aesthetic. Uniformly busy \u2014 needs spatial hierarchy. Impressive rather than moving.",
+    "analysisText": "Technique: Binary XOR moir\u00e9 interference \u2014 4 concentric circle sources with offset centres and varied frequencies. Warm amber-to-indigo ink on cream.. Self-score: 7/10.",
+    "generated": "2026-03-02T12:00:00",
+    "imageUrl": "/gallery/2026-03-02-between-three-stones.png",
+    "source": "original",
+    "presentation": {
+      "mode": "still",
+      "width": 2400,
+      "height": 2400
+    }
+  },
+  {
+    "id": "2026-03-03-prismatic-current",
+    "title": "Prismatic Current",
+    "description": "Strongest piece yet. Colour does mathematical work \u2014 reveals topology. Dark breathing space between rivers. Teal/emerald/gold/violet palette emerged naturally. First colour piece.",
+    "analysisText": "Technique: Perlin-like flow field with spectral colour mapped to flow direction. 8000 particles, 200 steps each. Colour encodes field topology.. Self-score: 8/10.",
+    "generated": "2026-03-03T12:00:00",
+    "imageUrl": "/gallery/2026-03-03-prismatic-current.png",
+    "source": "original",
+    "presentation": {
+      "mode": "still",
+      "width": 2400,
+      "height": 2400
+    }
+  },
+  {
+    "id": "2026-03-03-filament",
+    "title": "Filament",
+    "description": "Strong concept \u2014 DLA as radiant organism. But the glow effect obliterates the dendritic structure. Interior red channels are interesting. Rendering needs restraint.",
+    "analysisText": "Technique: Diffusion-limited aggregation with luminous distance field. Growth chronology encoded as colour: deep ember core to incandescent tips.. Self-score: 5/10.",
+    "generated": "2026-03-03T12:00:00",
+    "imageUrl": "/gallery/2026-03-03-filament.png",
+    "source": "original",
+    "presentation": {
+      "mode": "still",
+      "width": 2400,
+      "height": 2400
+    }
+  },
+  {
+    "id": "glyph-matrix-20260301-225750",
+    "title": "Digital Rain \u2014 Matrix",
+    "description": "Digital rain \u2014 cascading columns of glyphs.",
+    "analysisText": "Dense matrix rainfall with rhythmic column drift and soft fade decay. Contrast weighted toward bright glyph heads and ghosted tails. Self-score: 7.8/10.",
+    "generated": "2026-03-01T22:57:57.607063",
+    "presentation": {
+      "mode": "still",
+      "width": 1280,
+      "height": 720
+    },
+    "defaultConfig": {
+      "algo": "matrix",
+      "palette": "matrix",
+      "ramp": "digital",
+      "fontSize": 14,
+      "speed": 1,
+      "seed": 42,
+      "fx": {
+        "scanlines": false,
+        "vignette": true,
+        "glow": false
+      },
+      "params": {
+        "density": 0.65,
+        "maxSpeed": 1.4,
+        "fadeRate": 0.9
+      }
+    },
+    "source": "canvas-render"
+  },
+  {
+    "id": "glyph-reaction-20260301-225809",
+    "title": "Mitosis Bloom \u2014 Reaction Diffusion",
+    "description": "Gray-Scott reaction-diffusion \u2014 organic morphogenesis.",
+    "analysisText": "Mitosis-like bloom fronts with high local contrast. Pattern grows in pulses, then fractures into veins before recombining. Self-score: 8.2/10.",
+    "generated": "2026-03-01T22:58:24.871546",
+    "presentation": {
+      "mode": "still",
+      "width": 1280,
+      "height": 720
+    },
+    "defaultConfig": {
+      "algo": "reaction",
+      "palette": "matrix",
+      "ramp": "dense",
+      "fontSize": 14,
+      "speed": 1,
+      "seed": 77,
+      "fx": {
+        "scanlines": true,
+        "vignette": true,
+        "glow": true
+      },
+      "params": {
+        "feed": 0.0367,
+        "kill": 0.0649,
+        "diffA": 1,
+        "diffB": 0.5
+      }
+    },
+    "source": "canvas-render"
+  },
+  {
+    "id": "glyph-swirl-20260301-225829",
+    "title": "Solar Orbit \u2014 Swirl",
+    "description": "Particles spiralling around gravitational attractors.",
+    "analysisText": "Flow field with spectral colour mapped to direction. 8000 particles tracing rivers of light through darkness. Colour encodes topology. Self-score: 8/10.",
+    "generated": "2026-03-01T22:58:37.848552",
+    "presentation": {
+      "mode": "still",
+      "width": 1280,
+      "height": 720
+    },
+    "defaultConfig": {
+      "algo": "swirl",
+      "palette": "solar",
+      "ramp": "dots",
+      "fontSize": 14,
+      "speed": 1,
+      "seed": 99,
+      "fx": {
+        "scanlines": true,
+        "vignette": true,
+        "glow": false
+      },
+      "params": {
+        "particles": 1100,
+        "attractors": 3,
+        "pull": 0.095
+      }
+    },
+    "source": "canvas-render"
+  },
+  {
     "id": "neon-rain-v1",
     "title": "Neon Rain v1",
     "description": "Default Matrix composition selected by Glyph.",
-    "presentation": { "mode": "animated" },
+    "analysisText": "Baseline neon rain study used as control for later palette and ramp experiments. Balanced readability and motion texture. Self-score: 7.5/10.",
+    "generated": "2026-03-02T09:00:00.000000",
+    "presentation": {
+      "mode": "still",
+      "width": 1280,
+      "height": 720
+    },
     "defaultConfig": {
       "algo": "matrix",
       "palette": "matrix",
@@ -11,8 +181,17 @@
       "fontSize": 14,
       "speed": 1,
       "seed": 4242,
-      "fx": { "scanlines": true, "vignette": true, "glow": false },
-      "params": { "density": 0.65, "maxSpeed": 1.4, "fadeRate": 0.9 }
-    }
+      "fx": {
+        "scanlines": true,
+        "vignette": true,
+        "glow": false
+      },
+      "params": {
+        "density": 0.65,
+        "maxSpeed": 1.4,
+        "fadeRate": 0.9
+      }
+    },
+    "source": "canvas-render"
   }
 ]

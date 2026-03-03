@@ -8,6 +8,7 @@
   // DOM elements
   const artworkSel = document.getElementById('artwork');
   const artworkMeta = document.getElementById('artworkMeta');
+  const aspectRatioSel = document.getElementById('aspectRatio');
   const algoSel = document.getElementById('algo');
   const paletteSel = document.getElementById('palette');
   const rampSel = document.getElementById('ramp');
@@ -31,16 +32,46 @@
   const submitNoteBtn = document.getElementById('submitNote');
   const notesList = document.getElementById('notesList');
   const variantsList = document.getElementById('variantsList');
+  const panel = document.getElementById('panel');
 
   let artworks = [];
   let currentArtwork = null;
   let algo = null;
+  const urlParams = new URLSearchParams(window.location.search);
+  const requestedArtworkId = urlParams.get('artwork');
+  const requestedRatio = urlParams.get('ratio');
+  const fullscreenMode = urlParams.get('fullscreen') === '1';
   let running = true;
   let frameCount = 0;
+  let currentAspectRatio = 0;
   let lastFpsTime = performance.now();
   let fpsFrames = 0;
   let speed = 1.0;
   let stepsAccum = 0;
+
+  if (fullscreenMode && panel) {
+    panel.style.display = 'none';
+  }
+
+  function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+
+  function parseRatio(value) {
+    if (!value || value === 'auto') return 0;
+    if (String(value).includes(':')) {
+      const [w, h] = String(value).split(':').map(Number);
+      if (!w || !h) return 0;
+      return w / h;
+    }
+    const n = Number(value);
+    return Number.isFinite(n) && n > 0 ? n : 0;
+  }
+
+  function ratioFromArtwork(item) {
+    const p = item?.presentation || {};
+    const w = Number(p.width || item?.width || 0);
+    const h = Number(p.height || item?.height || 0);
+    return w > 0 && h > 0 ? w / h : 0;
+  }
 
   function readCurrentConfig() {
     return {
@@ -50,6 +81,7 @@
       fontSize: parseInt(fontSlider.value),
       speed: parseFloat(speedSlider.value),
       seed: parseInt(seedInput.value) || 42,
+      aspectRatio: aspectRatioSel?.value || 'auto',
       fx: {
         scanlines: fxScanlines.checked,
         vignette: fxVignette.checked,
@@ -68,6 +100,7 @@
     if (config.fontSize != null) fontSlider.value = config.fontSize;
     if (config.speed != null) speedSlider.value = config.speed;
     if (config.seed != null) seedInput.value = config.seed;
+    if (aspectRatioSel && config.aspectRatio) aspectRatioSel.value = config.aspectRatio;
 
     fontVal.textContent = fontSlider.value;
     speed = parseFloat(speedSlider.value);
@@ -83,9 +116,22 @@
     ui.buildParams(AlgoClass, config.params || null);
   }
 
+  function renderCurrentState() {
+    if (!algo) return;
+    const { chars, brightness } = algo.getState();
+    const fx = {
+      scanlines: fxScanlines.checked,
+      vignette: fxVignette.checked,
+      glow: fxGlow.checked,
+    };
+    engine.render(chars, brightness, rampSel.value, paletteSel.value, fx);
+  }
+
   function init() {
     const fontSize = parseInt(fontSlider.value);
-    const { rows, cols } = engine.setup(fontSize);
+    const selectedRatio = parseRatio(aspectRatioSel?.value);
+    const ratio = selectedRatio || currentAspectRatio || 0;
+    const { rows, cols } = engine.setup(fontSize, { aspectRatio: ratio });
 
     const algoName = algoSel.value;
     const AlgoClass = ALGORITHMS[algoName];
@@ -103,6 +149,11 @@
 
     algo = new AlgoClass(rows, cols, rng, ramp.length, ui.getParams());
     frameCount = 0;
+
+    // Ensure canvas is never blank when paused / after parameter edits.
+    algo.step();
+    frameCount++;
+    renderCurrentState();
   }
 
   function frame() {
@@ -118,13 +169,7 @@
     }
 
     if (steps > 0) {
-      const { chars, brightness } = algo.getState();
-      const fx = {
-        scanlines: fxScanlines.checked,
-        vignette: fxVignette.checked,
-        glow: fxGlow.checked,
-      };
-      engine.render(chars, brightness, rampSel.value, paletteSel.value, fx);
+      renderCurrentState();
     }
 
     fpsFrames++;
@@ -157,7 +202,8 @@
     }
 
     if (artworks.length > 0) {
-      setCurrentArtwork(artworks[0].id);
+      const selected = artworks.find(a => a.id === requestedArtworkId);
+      setCurrentArtwork(selected ? selected.id : artworks[0].id);
     }
   }
 
@@ -168,6 +214,31 @@
     artworkSel.value = id;
     const mode = found.presentation?.mode || 'animated';
     artworkMeta.textContent = `${mode.toUpperCase()} • ${found.description || ''}`;
+
+    // Still artworks open paused by default in playground.
+    running = mode !== 'still';
+    pauseBtn.textContent = running ? '⏸ Pause' : '▶ Play';
+    pauseBtn.classList.toggle('active', !running);
+
+    currentAspectRatio = ratioFromArtwork(found);
+    if (aspectRatioSel) {
+      // Add exact source ratio option if artwork has dimensions
+      const p = found.presentation || {};
+      const aw = Number(p.width || found.width || 0);
+      const ah = Number(p.height || found.height || 0);
+      const existingSource = aspectRatioSel.querySelector('[data-source-ratio]');
+      if (existingSource) existingSource.remove();
+      if (aw > 0 && ah > 0) {
+        const opt = document.createElement('option');
+        const g = gcd(aw, ah);
+        opt.value = `${aw / g}:${ah / g}`;
+        opt.textContent = `${aw}×${ah} (${aw / g}:${ah / g}) — Source`;
+        opt.setAttribute('data-source-ratio', 'true');
+        aspectRatioSel.insertBefore(opt, aspectRatioSel.firstChild.nextSibling);
+      }
+      aspectRatioSel.value = 'auto';
+    }
+
     applyConfig(found.defaultConfig || {});
     init();
     loadVariants();
@@ -233,6 +304,10 @@
     speedVal.textContent = speed.toFixed(1);
   });
 
+  aspectRatioSel?.addEventListener('change', () => {
+    init();
+  });
+
   randomSeedBtn.addEventListener('click', () => {
     seedInput.value = Math.floor(Math.random() * 999999);
     init();
@@ -291,6 +366,15 @@
   });
 
   (async function boot() {
+    if (requestedRatio) {
+      const parsed = parseRatio(requestedRatio);
+      if (parsed > 0) currentAspectRatio = parsed;
+      if (aspectRatioSel) {
+        const allowed = Array.from(aspectRatioSel.options).map(o => o.value);
+        if (allowed.includes(requestedRatio)) aspectRatioSel.value = requestedRatio;
+      }
+    }
+
     await loadArtworks();
     if (!currentArtwork) {
       ui.buildParams(ALGORITHMS[algoSel.value]);

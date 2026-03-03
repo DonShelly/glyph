@@ -28,7 +28,7 @@ class Engine {
     this.fontFamily = "'DejaVu Sans Mono', 'Fira Code', 'Courier New', monospace";
   }
 
-  setup(fontSize) {
+  setup(fontSize, options = {}) {
     this.fontSize = fontSize;
     this.ctx.font = `${fontSize}px ${this.fontFamily}`;
     const m = this.ctx.measureText('M');
@@ -36,14 +36,34 @@ class Engine {
     this.charH = Math.ceil(fontSize * 1.2);
 
     const rect = this.canvas.parentElement.getBoundingClientRect();
-    const panelW = 280;
-    const availW = window.innerWidth - panelW;
-    const availH = window.innerHeight;
-    this.canvas.width = availW;
-    this.canvas.height = availH;
+    const availW = Math.max(1, Math.floor(rect.width || this.canvas.clientWidth || window.innerWidth));
+    const availH = Math.max(1, Math.floor(rect.height || this.canvas.clientHeight || window.innerHeight));
 
-    this.cols = Math.floor(availW / this.charW);
-    this.rows = Math.floor(availH / this.charH);
+    let targetW = availW;
+    let targetH = availH;
+    const ratio = Number(options.aspectRatio || 0);
+    if (Number.isFinite(ratio) && ratio > 0) {
+      if (availW / availH > ratio) {
+        targetH = availH;
+        targetW = Math.floor(targetH * ratio);
+      } else {
+        targetW = availW;
+        targetH = Math.floor(targetW / ratio);
+      }
+    }
+
+    const dpr = window.devicePixelRatio || 1;
+    this.dpr = dpr;
+    this.viewW = targetW;
+    this.viewH = targetH;
+    this.canvas.style.width = `${targetW}px`;
+    this.canvas.style.height = `${targetH}px`;
+    this.canvas.width = Math.max(1, Math.floor(targetW * dpr));
+    this.canvas.height = Math.max(1, Math.floor(targetH * dpr));
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    this.cols = Math.max(1, Math.floor(targetW / this.charW));
+    this.rows = Math.max(1, Math.floor(targetH / this.charH));
 
     // Pre-render character tiles as offscreen canvases for each brightness level
     this._tileCache = null; // Invalidate
@@ -58,7 +78,7 @@ class Engine {
 
     // Clear
     ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, this.viewW || canvas.width, this.viewH || canvas.height);
 
     // Draw characters
     ctx.font = `${fontSize}px ${fontFamily}`;
@@ -87,20 +107,24 @@ class Engine {
   }
 
   _applyScanlines(ctx, canvas) {
+    const w = this.viewW || canvas.width;
+    const h = this.viewH || canvas.height;
     ctx.fillStyle = 'rgba(0,0,0,0.12)';
-    for (let y = 1; y < canvas.height; y += 2) {
-      ctx.fillRect(0, y, canvas.width, 1);
+    for (let y = 1; y < h; y += 2) {
+      ctx.fillRect(0, y, w, 1);
     }
   }
 
   _applyVignette(ctx, canvas) {
-    const cx = canvas.width / 2, cy = canvas.height / 2;
+    const w = this.viewW || canvas.width;
+    const h = this.viewH || canvas.height;
+    const cx = w / 2, cy = h / 2;
     const r = Math.max(cx, cy) * 1.2;
     const grad = ctx.createRadialGradient(cx, cy, r * 0.4, cx, cy, r);
     grad.addColorStop(0, 'rgba(0,0,0,0)');
     grad.addColorStop(1, 'rgba(0,0,0,0.6)');
     ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, w, h);
   }
 
   _applyGlow(ctx, canvas) {

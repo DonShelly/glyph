@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Glyph Playground — Algorithmic ASCII Art</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <div id="canvasWrap">
+    <canvas id="canvas"></canvas>
+  </div>
+  <div id="panel">
+    <h1>GLYPH <span class="sub">🔣</span></h1>
+    <p class="tagline">Algorithmic ASCII art generator</p>
+
+    <div class="section">
+      <label>Artwork</label>
+      <select id="artwork"></select>
+      <p id="artworkMeta" class="tiny"></p>
+    </div>
+
+    <div class="section">
+      <label>Algorithm</label>
+      <select id="algo">
+        <option value="matrix">Matrix Rain</option>
+        <option value="smoke">Fluid Smoke</option>
+        <option value="reaction">Reaction-Diffusion</option>
+        <option value="fire">Fire</option>
+        <option value="waves">Wave Interference</option>
+        <option value="automata">Cellular Automata</option>
+        <option value="swirl">Particle Swirl</option>
+      </select>
+    </div>
+
+    <div class="section">
+      <label>Palette</label>
+      <select id="palette">
+        <option value="matrix">Matrix</option>
+        <option value="cyan">Cyan</option>
+        <option value="amber">Amber</option>
+        <option value="phosphor">Phosphor</option>
+        <option value="lavender">Lavender</option>
+        <option value="fire">Fire</option>
+        <option value="ice">Ice</option>
+        <option value="rose">Rose</option>
+        <option value="solar">Solar</option>
+      </select>
+    </div>
+
+    <div class="section">
+      <label>Character Set</label>
+      <select id="ramp">
+        <option value="standard">Standard</option>
+        <option value="blocks">Blocks</option>
+        <option value="minimal">Minimal</option>
+        <option value="digital">Digital</option>
+        <option value="dense">Dense</option>
+        <option value="dots">Dots</option>
+      </select>
+    </div>
+
+    <div class="section">
+      <label>Aspect Ratio</label>
+      <select id="aspectRatio">
+        <option value="auto">Auto (Artwork)</option>
+        <option value="16:9">16:9</option>
+        <option value="4:3">4:3</option>
+        <option value="1:1">1:1</option>
+        <option value="3:4">3:4</option>
+        <option value="9:16">9:16</option>
+        <option value="21:9">21:9</option>
+      </select>
+    </div>
+
+    <div class="section">
+      <label>Font Size <span id="fontSizeVal">14</span>px</label>
+      <input type="range" id="fontSize" min="8" max="24" value="14" step="1">
+    </div>
+
+    <div class="section">
+      <label>Speed <span id="speedVal">1.0</span>x</label>
+      <input type="range" id="speed" min="0.1" max="3" value="1" step="0.1">
+    </div>
+
+    <div class="section" id="algoParams"></div>
+
+    <div class="section">
+      <label>Effects</label>
+      <div class="checks">
+        <label><input type="checkbox" id="fxScanlines" checked> Scanlines</label>
+        <label><input type="checkbox" id="fxVignette" checked> Vignette</label>
+        <label><input type="checkbox" id="fxGlow"> Glow</label>
+      </div>
+    </div>
+
+    <div class="section">
+      <label>Seed</label>
+      <div class="row">
+        <input type="number" id="seed" value="42" min="0" max="999999">
+        <button id="randomSeed" title="Random seed">🎲</button>
+      </div>
+    </div>
+
+    <div class="section buttons">
+      <button id="restart">Restart</button>
+      <button id="pause">⏸ Pause</button>
+    </div>
+
+    <div class="section">
+      <label>Submit Adrian Version</label>
+      <textarea id="variantComment" rows="3" placeholder="e.g. this param set looks cooler to me"></textarea>
+      <button id="submitVariant" class="full">Submit this version</button>
+      <p id="submitStatus" class="tiny"></p>
+    </div>
+
+    <div class="section">
+      <label>Notes for Glyph (before next artwork)</label>
+      <textarea id="glyphNote" rows="3" placeholder="Leave guidance for Glyph..."></textarea>
+      <button id="submitNote" class="full">Post note</button>
+    </div>
+
+    <div class="section">
+      <label>Recent Notes</label>
+      <div id="notesList" class="feed"></div>
+    </div>
+
+    <div class="section">
+      <label>Adrian Variants</label>
+      <div id="variantsList" class="feed"></div>
+    </div>
+
+    <div class="section stats">
+      <span id="fpsDisplay">0 fps</span>
+      <span id="frameDisplay">frame 0</span>
+    </div>
+
+    <p class="footer">
+      Built by <a href="https://github.com/DonShelly/glyph" target="_blank">ELSOLVE</a> agents
+    </p>
+  </div>
+</div>
+<script src="js/rng.js"></script>
+<script src="js/algorithms.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/store.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
