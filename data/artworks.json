@@ -228,7 +228,7 @@
       "palette": "amber",
       "ramp": "standard",
       "fontSize": 13,
-      "speed": 0.6,
+      "speed": 1,
       "seed": 2718,
       "fx": {
         "scanlines": false,
@@ -237,8 +237,8 @@
       },
       "params": {
         "emitters": 3,
-        "strength": 0.55,
-        "turbulence": 0.02
+        "strength": 0.85,
+        "turbulence": 0.04
       }
     },
     "source": "canvas-render"
@@ -295,7 +295,7 @@
       "palette": "fire",
       "ramp": "dense",
       "fontSize": 14,
-      "speed": 0.4,
+      "speed": 0.8,
       "seed": 451,
       "fx": {
         "scanlines": false,
@@ -303,8 +303,8 @@
         "glow": true
       },
       "params": {
-        "cooling": 0.05,
-        "intensity": 0.5
+        "cooling": 0.035,
+        "intensity": 0.7
       }
     },
     "source": "canvas-render"
@@ -405,7 +405,7 @@
       },
       "params": {
         "preset": "coral",
-        "stepsPerFrame": 20
+        "stepsPerFrame": 24
       }
     },
     "source": "canvas-render"
