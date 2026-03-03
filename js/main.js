@@ -128,14 +128,22 @@
       vignette: fxVignette.checked,
       glow: fxGlow.checked,
     };
-    engine.render(chars, brightness, rampSel.value, paletteSel.value, fx);
+    const AlgoClass = ALGORITHMS[algoSel.value];
+    if (AlgoClass && AlgoClass.renderMode === 'pixel') {
+      engine.renderPixels(brightness, paletteSel.value, fx);
+    } else {
+      engine.render(chars, brightness, rampSel.value, paletteSel.value, fx);
+    }
   }
 
   function init() {
     const fontSize = parseInt(fontSlider.value);
     const selectedRatio = parseRatio(aspectRatioSel?.value);
     const ratio = selectedRatio || currentAspectRatio || 0;
-    const { rows, cols } = engine.setup(fontSize, { aspectRatio: ratio });
+    const algoNameForSetup = algoSel.value;
+    const AlgoClassForSetup = ALGORITHMS[algoNameForSetup];
+    const isPixelMode = AlgoClassForSetup && AlgoClassForSetup.renderMode === 'pixel';
+    const { rows, cols } = engine.setup(fontSize, { aspectRatio: ratio, pixelMode: isPixelMode });
 
     const algoName = algoSel.value;
     const AlgoClass = ALGORITHMS[algoName];

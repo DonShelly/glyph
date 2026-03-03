@@ -19,6 +19,7 @@ const PALETTES = {
   ice:      b => [Math.floor(160*b), Math.floor(210*b), Math.floor(255*b)],
   rose:     b => [Math.floor(255*b), Math.floor(80*b), Math.floor(120*b)],
   solar:    b => [Math.floor(255*b), Math.floor(200*b), Math.max(0,Math.floor(100*b-30))],
+  warmwhite: b => [Math.floor(245*b), Math.floor(235*b), Math.floor(215*b)],
 };
 
 class Engine {
@@ -30,10 +31,18 @@ class Engine {
 
   setup(fontSize, options = {}) {
     this.fontSize = fontSize;
-    this.ctx.font = `${fontSize}px ${this.fontFamily}`;
-    const m = this.ctx.measureText('M');
-    this.charW = Math.ceil(m.width) || Math.ceil(fontSize * 0.6);
-    this.charH = Math.ceil(fontSize * 1.2);
+    this.pixelMode = !!options.pixelMode;
+    if (this.pixelMode) {
+      // For pixel rendering, use small cells (3px) for high resolution
+      const pxSize = options.pixelSize || 3;
+      this.charW = pxSize;
+      this.charH = pxSize;
+    } else {
+      this.ctx.font = `${fontSize}px ${this.fontFamily}`;
+      const m = this.ctx.measureText('M');
+      this.charW = Math.ceil(m.width) || Math.ceil(fontSize * 0.6);
+      this.charH = Math.ceil(fontSize * 1.2);
+    }
 
     const rect = this.canvas.parentElement.getBoundingClientRect();
     const availW = Math.max(1, Math.floor(rect.width || this.canvas.clientWidth || window.innerWidth));
@@ -104,6 +113,33 @@ class Engine {
     if (fx.glow) this._applyGlow(ctx, canvas);
     if (fx.scanlines) this._applyScanlines(ctx, canvas);
     if (fx.vignette) this._applyVignette(ctx, canvas);
+  }
+
+  renderPixels(brightness, paletteName, fx) {
+    const { ctx, rows, cols, charW, charH } = this;
+    const paletteFn = PALETTES[paletteName] || PALETTES.matrix;
+
+    // Clear
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, this.viewW || this.canvas.width, this.viewH || this.canvas.height);
+
+    // Draw filled rectangles (pixel blocks) instead of characters
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const idx = r * cols + c;
+        const b = brightness[idx];
+        if (b < 0.005) continue;
+
+        const [cr, cg, cb] = paletteFn(b);
+        ctx.fillStyle = `rgb(${cr},${cg},${cb})`;
+        ctx.fillRect(c * charW, r * charH, charW, charH);
+      }
+    }
+
+    // Post-processing
+    if (fx.glow) this._applyGlow(ctx, this.canvas);
+    if (fx.scanlines) this._applyScanlines(ctx, this.canvas);
+    if (fx.vignette) this._applyVignette(ctx, this.canvas);
   }
 
   _applyScanlines(ctx, canvas) {

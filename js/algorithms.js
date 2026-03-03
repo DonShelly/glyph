@@ -500,8 +500,9 @@ class ParticleSwirl {
 class LorenzDissolution {
   static label = 'Lorenz Dissolution';
   static desc = 'Lorenz attractor dissolving into noise over time';
-  static prefPalette = 'amber';
+  static prefPalette = 'warmwhite';
   static prefRamp = 'standard';
+  static renderMode = 'pixel';
   static params = [
     { key: 'sigma', label: 'Sigma', min: 5, max: 20, step: 0.5, def: 10 },
     { key: 'rho', label: 'Rho', min: 15, max: 40, step: 0.5, def: 28 },
@@ -593,6 +594,7 @@ class LorenzDissolution {
 
 // --- 9. Zone Plate Moiré ---
 class ZonePlateMoire {
+  static renderMode = 'pixel';
   static label = 'Zone Plate Moiré';
   static desc = 'Fresnel zone plate interference — phantom topography';
   static prefPalette = 'ice';
@@ -670,6 +672,7 @@ class ZonePlateMoire {
 
 // --- 10. Flow Field (Prismatic Current) ---
 class FlowField {
+  static renderMode = 'pixel';
   static label = 'Flow Field';
   static desc = 'Particle traces through a vector field — colour encodes direction';
   static prefPalette = 'solar';
@@ -766,6 +769,7 @@ class FlowField {
 
 // --- 11. Taxonomy (Spatially Varying Reaction-Diffusion) ---
 class TaxonomyRD {
+  static renderMode = 'pixel';
   static label = 'Taxonomy RD';
   static desc = 'Gray-Scott with spatially varying parameters — a map of morphogenesis';
   static prefPalette = 'amber';
@@ -840,6 +844,7 @@ class TaxonomyRD {
 
 // --- 12. DLA Filament ---
 class DLAFilament {
+  static renderMode = 'pixel';
   static label = 'DLA Filament';
   static desc = 'Diffusion-limited aggregation — dendritic growth from a seed';
   static prefPalette = 'fire';

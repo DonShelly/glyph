@@ -91,35 +91,53 @@
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     const fontSize = cfg.fontSize || 14;
-    const charW = Math.ceil(fontSize * 0.62);
-    const charH = Math.ceil(fontSize * 1.2);
+    const isPixelMode = AlgoClass.renderMode === 'pixel';
+    const charW = isPixelMode ? 3 : Math.ceil(fontSize * 0.62);
+    const charH = isPixelMode ? 3 : Math.ceil(fontSize * 1.2);
     const cols = Math.max(16, Math.floor(w / charW));
     const rows = Math.max(12, Math.floor(h / charH));
 
     const rng = new RNG(cfg.seed || 42);
     const algo = new AlgoClass(rows, cols, rng, ramp.length, cfg.params || {});
 
-    for (let i = 0; i < 44; i++) algo.step();
+    const warmUpSteps = isPixelMode ? 150 : 44;
+    for (let i = 0; i < warmUpSteps; i++) algo.step();
     const { chars, brightness } = algo.getState();
 
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, w, h);
-    ctx.font = `${fontSize}px 'DejaVu Sans Mono','Fira Code','Courier New',monospace`;
-    ctx.textBaseline = 'top';
 
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        const idx = r * cols + c;
-        const b = brightness[idx];
-        if (b < 0.01) continue;
+    const isPixelMode = AlgoClass.renderMode === 'pixel';
 
-        const ci = Math.min(ramp.length - 1, Math.max(0, chars[idx]));
-        const ch = ramp[ci];
-        if (ch === ' ') continue;
+    if (isPixelMode) {
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const idx = r * cols + c;
+          const b = brightness[idx];
+          if (b < 0.005) continue;
+          const [cr, cg, cb] = paletteFn(b);
+          ctx.fillStyle = `rgb(${cr},${cg},${cb})`;
+          ctx.fillRect(c * charW, r * charH, charW, charH);
+        }
+      }
+    } else {
+      ctx.font = `${fontSize}px 'DejaVu Sans Mono','Fira Code','Courier New',monospace`;
+      ctx.textBaseline = 'top';
 
-        const [cr, cg, cb] = paletteFn(b);
-        ctx.fillStyle = `rgb(${cr},${cg},${cb})`;
-        ctx.fillText(ch, c * charW, r * charH);
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const idx = r * cols + c;
+          const b = brightness[idx];
+          if (b < 0.01) continue;
+
+          const ci = Math.min(ramp.length - 1, Math.max(0, chars[idx]));
+          const ch = ramp[ci];
+          if (ch === ' ') continue;
+
+          const [cr, cg, cb] = paletteFn(b);
+          ctx.fillStyle = `rgb(${cr},${cg},${cb})`;
+          ctx.fillText(ch, c * charW, r * charH);
+        }
       }
     }
 
