@@ -107,8 +107,6 @@
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, w, h);
 
-    const isPixelMode = AlgoClass.renderMode === 'pixel';
-
     if (isPixelMode) {
       for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
