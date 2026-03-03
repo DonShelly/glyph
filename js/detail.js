@@ -171,6 +171,21 @@
     currentItem = item;
     titleEl.textContent = item.title || item.id;
     descEl.textContent = item.description || '';
+
+    // Populate artist text sections
+    if (item.inspiration) {
+      document.getElementById('inspirationSection').hidden = false;
+      document.getElementById('inspirationText').textContent = item.inspiration;
+    }
+    if (item.reflection) {
+      document.getElementById('reflectionSection').hidden = false;
+      document.getElementById('reflectionText').textContent = item.reflection;
+    }
+    if (item.voiceDevelopment) {
+      document.getElementById('voiceSection').hidden = false;
+      document.getElementById('voiceText').textContent = item.voiceDevelopment;
+    }
+
     analysisEl.innerHTML = analysisRows(item);
 
     const ratio = getAspectRatio(item);
