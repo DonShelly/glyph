@@ -2,6 +2,10 @@
 
 (function() {
   const canvas = document.getElementById('canvas');
+  const originalImage = document.createElement('img');
+  originalImage.id = 'originalImage';
+  originalImage.style.cssText = 'display:none;max-width:100%;max-height:100%;object-fit:contain;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)';
+  document.getElementById('canvasWrap').appendChild(originalImage);
   const engine = new Engine(canvas);
   const ui = new UI();
 
@@ -150,9 +154,13 @@
     algo = new AlgoClass(rows, cols, rng, ramp.length, ui.getParams());
     frameCount = 0;
 
-    // Ensure canvas is never blank when paused / after parameter edits.
-    algo.step();
-    frameCount++;
+    // Run enough warm-up steps so the canvas is never blank.
+    // Still artworks need many frames to develop their pattern (matching detail.js).
+    const warmUp = running ? 1 : 44;
+    for (let i = 0; i < warmUp; i++) {
+      algo.step();
+      frameCount++;
+    }
     renderCurrentState();
   }
 
@@ -239,8 +247,28 @@
       aspectRatioSel.value = 'auto';
     }
 
-    applyConfig(found.defaultConfig || {});
-    init();
+    // If artwork has an original image but no algorithm config, show the image directly
+    const imgUrl = found?.original?.url || found?.originalUrl || found?.imageUrl || found?.assets?.full;
+    const hasAlgo = !!(found.defaultConfig?.algo);
+
+    if (imgUrl && !hasAlgo) {
+      // Static original — show image, hide canvas
+      canvas.style.display = 'none';
+      originalImage.src = imgUrl;
+      originalImage.style.display = 'block';
+      algo = null;
+      running = false;
+      pauseBtn.textContent = '▶ Play';
+      pauseBtn.classList.toggle('active', true);
+      pauseBtn.disabled = true;
+    } else {
+      // Algorithmic piece — run in canvas
+      canvas.style.display = '';
+      originalImage.style.display = 'none';
+      pauseBtn.disabled = false;
+      applyConfig(found.defaultConfig || {});
+      init();
+    }
     loadVariants();
   }
 
