@@ -15,8 +15,12 @@ module.exports = async (req, res) => {
     if (req.method === 'GET') {
       let remote = [];
       if (hasDb()) {
-        remote = await sb('artworks?select=payload&order=created_at.desc&limit=100');
-        remote = remote.map(x => x.payload).filter(Boolean);
+        try {
+          remote = await sb('artworks?select=payload&order=created_at.desc&limit=100');
+          remote = remote.map(x => x.payload).filter(Boolean);
+        } catch (dbErr) {
+          console.warn('Supabase fetch failed, using local only:', dbErr.message);
+        }
       }
       return res.status(200).json({ items: [...remote, ...base] });
     }
