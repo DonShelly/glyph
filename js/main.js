@@ -266,7 +266,10 @@
       canvas.style.display = '';
       originalImage.style.display = 'none';
       pauseBtn.disabled = false;
-      applyConfig(found.defaultConfig || {});
+      if (hasAlgo) {
+        applyConfig(found.defaultConfig);
+      }
+      // Always (re)init so the current panel controls take effect
       init();
     }
     loadVariants();
