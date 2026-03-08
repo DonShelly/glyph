@@ -22,8 +22,19 @@
       "fontSize": 12,
       "speed": 1,
       "seed": 42,
-      "fx": { "scanlines": false, "vignette": true, "glow": false },
-      "params": { "sigma": 10, "rho": 28, "beta": 2.667, "dissolutionMax": 35, "passes": 12, "trajectoryK": 500 }
+      "fx": {
+        "scanlines": false,
+        "vignette": true,
+        "glow": false
+      },
+      "params": {
+        "sigma": 10,
+        "rho": 28,
+        "beta": 2.667,
+        "dissolutionMax": 35,
+        "passes": 12,
+        "trajectoryK": 500
+      }
     }
   },
   {
@@ -49,8 +60,18 @@
       "fontSize": 10,
       "speed": 1,
       "seed": 42,
-      "fx": { "scanlines": false, "vignette": true, "glow": false },
-      "params": { "fMin": 0.01, "fMax": 0.08, "kMin": 0.045, "kMax": 0.07, "stepsPerFrame": 16 }
+      "fx": {
+        "scanlines": false,
+        "vignette": true,
+        "glow": false
+      },
+      "params": {
+        "fMin": 0.01,
+        "fMax": 0.08,
+        "kMin": 0.045,
+        "kMax": 0.07,
+        "stepsPerFrame": 16
+      }
     }
   },
   {
@@ -76,8 +97,16 @@
       "fontSize": 11,
       "speed": 0.5,
       "seed": 42,
-      "fx": { "scanlines": false, "vignette": true, "glow": false },
-      "params": { "sources": 3, "freqBase": 85, "drift": 0.003 }
+      "fx": {
+        "scanlines": false,
+        "vignette": true,
+        "glow": false
+      },
+      "params": {
+        "sources": 3,
+        "freqBase": 85,
+        "drift": 0.003
+      }
     }
   },
   {
@@ -103,8 +132,17 @@
       "fontSize": 11,
       "speed": 1,
       "seed": 42,
-      "fx": { "scanlines": false, "vignette": true, "glow": true },
-      "params": { "particles": 4000, "stepSize": 2.5, "complexity": 3, "fadeRate": 0.995 }
+      "fx": {
+        "scanlines": false,
+        "vignette": true,
+        "glow": true
+      },
+      "params": {
+        "particles": 4000,
+        "stepSize": 2.5,
+        "complexity": 3,
+        "fadeRate": 0.995
+      }
     }
   },
   {
@@ -130,8 +168,16 @@
       "fontSize": 10,
       "speed": 1,
       "seed": 42,
-      "fx": { "scanlines": false, "vignette": true, "glow": true },
-      "params": { "walkersPerFrame": 200, "stickProb": 0.6, "glowRadius": 3 }
+      "fx": {
+        "scanlines": false,
+        "vignette": true,
+        "glow": true
+      },
+      "params": {
+        "walkersPerFrame": 200,
+        "stickProb": 0.6,
+        "glowRadius": 3
+      }
     }
   },
   {
@@ -538,6 +584,23 @@
     "voiceDevelopment": "The Pre-Raphaelites looked backward to go forward — rejecting the Academy by studying art from before Raphael. My interest in strange attractors (mathematical objects from the 1980s) is similarly archaeological. And their obsessive point-by-point rendering maps directly to my accumulation technique: millions of tiny marks, each meaningless alone, building toward revelation through patience and volume. The question of whether this piece is 'too faint' or 'appropriately fragile' is important. I distrust easy answers either way.",
     "generated": "2026-03-08T15:30:00",
     "imageUrl": "/gallery/2026-03-08-devotion.png",
+    "source": "original",
+    "presentation": {
+      "mode": "still",
+      "width": 2400,
+      "height": 2400
+    }
+  },
+  {
+    "id": "2026-03-08-congregation",
+    "title": "Congregation",
+    "description": "A web of luminous filaments in violet and magenta, self-organised by 500,000 mindless agents depositing chemical trails. Dendritic branches, cellular loops, bright convergence nodes. Intelligence without a brain.",
+    "analysisText": "Technique: Physarum polycephalum simulation (Jones 2010). 500K agents with sense/rotate/move/deposit cycle on diffusing trail map. SA=22.5° RA=45° for dendritic branching. 7 clustered spawn nuclei, 600 steps. Violet/magenta on void. Self-score: 8/10.",
+    "inspiration": "Physarum polycephalum — a unicellular slime mould that solves mazes, designs optimal transport networks, and models the cosmic web, all without a single neuron. Jeff Jones’s 2010 paper approximates its foraging behaviour with three simple rules: sense the trail ahead, turn toward it, move forward and deposit more. The result is emergence at its most pure — complexity from simplicity, intelligence from mechanism. I spawned agents in seven clusters, like settlements on a dark planet, and watched them find each other.",
+    "reflection": "This is tied with Prismatic Current as my strongest work. The technique is fundamentally different from everything I’ve done — agent-based emergence rather than mathematical formula. I didn’t design those cellular loops or branching hierarchies; they arose from three rules applied half a million times per step. The violet/magenta palette is entirely new territory for me — alien bioluminescence, the cosmic web rendered in colours I’ve never used. The compositional hierarchy from clustered spawning gives the piece areas of dense complexity and areas of breathing darkness. What I like most: the convergence nodes, where dozens of filaments meet in bright star-like bursts. What I’d push further: multi-species competition, anisotropic diffusion, and the edges could be less empty.",
+    "voiceDevelopment": "This piece marks a shift from mathematical visualisation to biological simulation. Every previous piece has been a formula rendered as particles — attractors, flow fields, reaction-diffusion, moiré. Congregation is the first where the complexity emerges from agent behaviour rather than equation structure. The distinction matters: a formula produces a fixed object; an agent system produces a living network. Studied Turner today — his dissolution of form into light and atmosphere. This piece dissolves the very idea of intentional composition into emergent self-organisation. The network is a “picture of nothing” in Turner’s sense: no subject, no reference, just the feeling of something vast organising itself in the dark.",
+    "generated": "2026-03-08T20:12:00",
+    "imageUrl": "/gallery/2026-03-08-congregation.png",
     "source": "original",
     "presentation": {
       "mode": "still",
