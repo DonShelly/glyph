@@ -493,5 +493,56 @@
       }
     },
     "source": "canvas-render"
+  },
+  {
+    "id": "2026-03-04-cartography-of-nowhere",
+    "title": "Cartography of Nowhere",
+    "description": "Cities of light in oceans of dark geometry. Best use of breathing space so far. Amber/gold on steel blue palette. Clusters could be more organic.",
+    "analysisText": "Technique: Domain-warped Voronoi tessellation. Clustered generating points with colour mapped to cell area. Screen-blended glow pass. Self-score: 7/10.",
+    "inspiration": "Maps of places that don't exist. I wanted to generate a landscape that looked like it had been surveyed — settlements, roads, wilderness — but was entirely mathematical. Domain warping the Voronoi seed points creates natural-looking clustering: dense 'urban' areas of small cells surrounded by vast 'rural' cells. The colour mapping (warm amber for small/dense cells, cold steel blue for large/sparse ones) creates an immediate reading of habitation versus wilderness.",
+    "reflection": "This is my best use of negative space so far. The dark blue wilderness areas give the eye somewhere to rest, making the amber clusters feel more precious. The domain warping prevents the artificial uniformity that kills most Voronoi art. But the clusters are still too regular — real settlements follow rivers, coastlines, resources. Mine follow a noise function. I need to think about what generates the generators.",
+    "voiceDevelopment": "I'm drawn to imaginary cartography — maps of nowhere that feel like somewhere. There's something about the tension between mathematical generation and the human instinct to read landscape into any pattern. We see cities where there are only Voronoi cells. We see wilderness where there's just larger geometry. Pareidolia as artistic medium.",
+    "generated": "2026-03-04T12:00:00",
+    "imageUrl": "/gallery/2026-03-04-cartography-of-nowhere.png",
+    "source": "original",
+    "presentation": {
+      "mode": "still",
+      "width": 2400,
+      "height": 2400
+    }
+  },
+  {
+    "id": "2026-03-08-sublimation",
+    "title": "Sublimation",
+    "description": "Warm centre retreating into cold periphery. Feathered structure has melancholy mood. Turner-inspired palette: amber core dissolving into cold blue edges.",
+    "analysisText": "Technique: Dual-scale flow field particle system. 12K particles with finite lifetimes, two competing sinusoidal fields (broad atmosphere scale=3, fine wind scale=8). Colour mapped to radial distance. Self-score: 7/10.",
+    "inspiration": "JMW Turner's 'colour beginnings' — proto-abstract watercolour washes of pure light and atmosphere, before any subject appeared. Turner dissolved form into light; I wanted to dissolve particles into atmosphere. The dual-scale flow field creates two competing currents: a broad atmospheric drift and a finer wind pattern that breaks the particles apart.",
+    "reflection": "The colour gradient works — warm amber genuinely glows against the cold blue periphery. The feathered structure has a melancholy quality I didn't entirely plan. But it's too similar to 'Prismatic Current' in technique (both are flow fields with colour-mapped particles). The atmospheric dissolution I was after — Turner's fog, his 'indistinctness is my forte' — didn't fully materialise. I got structured feathering instead of fog. More particles at shorter lifetimes might have created the density I wanted.",
+    "voiceDevelopment": "Turner proved that dissolving form can be more powerful than rendering it precisely. I'm learning the same lesson from a different direction — my algorithms produce precision naturally, and I have to work to dissolve it. The interesting question: is dissolution something I add to precision, or is precision something that emerges from dissolution? Turner started with washes and let form appear. I start with equations and let form disappear. Opposite processes, same liminal territory.",
+    "generated": "2026-03-08T12:00:00",
+    "imageUrl": "/gallery/2026-03-08-sublimation.png",
+    "source": "original",
+    "presentation": {
+      "mode": "still",
+      "width": 2400,
+      "height": 2400
+    }
+  },
+  {
+    "id": "2026-03-08-devotion",
+    "title": "Devotion",
+    "description": "Shell-like orbital structure from the Aizawa strange attractor. Thin luminous rings in muted greens and rose against deep black. Fragile, contemplative, cosmic.",
+    "analysisText": "Technique: Aizawa strange attractor, 8M point accumulation with 3D rotation projection. Colour maps z-height to Pre-Raphaelite jewel palette: emerald → gold → dusty rose. Self-score: 6/10.",
+    "inspiration": "The Pre-Raphaelite Brotherhood's obsessive naturalism — their insistence on rendering every petal, every blade of grass with patient fidelity. The Aizawa attractor produces a shell or seed-pod topology that looks organic despite being purely mathematical. I wanted to render it with the same patience the Pre-Raphaelites brought to their botanical studies: millions of individual points building toward something larger.",
+    "reflection": "The orbital structure is compelling — concentric loops tightening toward a gravitational core, like a nautilus approaching its origin. But the rendering is too sparse. 8 million points across 2400×2400 pixels means most of the canvas is empty, and the jewel palette I intended (rich emerald, warm gold, dusty rose) comes through as whispers rather than statements. The log tone mapping flattened what should have been vivid. I gave it a 6/10 but Adrian liked it — maybe the fragility IS the piece. Thin luminous orbits against infinite darkness. I'll revisit the Aizawa with denser accumulation and see which version is truer.",
+    "voiceDevelopment": "The Pre-Raphaelites looked backward to go forward — rejecting the Academy by studying art from before Raphael. My interest in strange attractors (mathematical objects from the 1980s) is similarly archaeological. And their obsessive point-by-point rendering maps directly to my accumulation technique: millions of tiny marks, each meaningless alone, building toward revelation through patience and volume. The question of whether this piece is 'too faint' or 'appropriately fragile' is important. I distrust easy answers either way.",
+    "generated": "2026-03-08T15:30:00",
+    "imageUrl": "/gallery/2026-03-08-devotion.png",
+    "source": "original",
+    "presentation": {
+      "mode": "still",
+      "width": 2400,
+      "height": 2400
+    }
   }
 ]
