@@ -607,5 +607,22 @@
       "width": 2400,
       "height": 2400
     }
+  },
+  {
+    "id": "2026-03-11-what-silence-looks-like",
+    "title": "What Silence Looks Like",
+    "description": "Chladni pattern particle simulation — 800,000 particles settling on the nodal lines of a vibrating plate. Four superposed eigenmodes create complex interference geometry. Particles descend via gradient toward silence, accumulating where the plate is still. Luminous cream lines trace the places where nothing moves, enclosing dark chambers of quiet.",
+    "analysisText": "The Chladni figure is one of the oldest demonstrations of wave physics — Ernst Chladni bowed metal plates dusted with sand in the 18th century, revealing the hidden geometry of sound. The sand collects on nodal lines: the places where the plate doesn't vibrate. This piece simulates that process algorithmically. Four eigenmodes are superposed: sin(nπx)sin(mπy) pairs at frequencies (2,5), (3,7), (1,4), and (5,8), with alternating symmetry signs. 800,000 particles perform gradient descent on |f|², drifting toward zero-amplitude regions with added Brownian noise to prevent exact convergence and preserve organic texture. The four-fold symmetry is not imposed — it's inherent to the wave mathematics of a square plate. The nodal network resembles biological cell membranes, stained glass, or maps of territories that don't exist.",
+    "inspiration": "Chladni's original experiments — the revelation that sound has geometry. The idea that silence has a shape, and that shape is beautiful. Also: the desire to try wave equations after nine pieces based on attractors, flow fields, reaction-diffusion, and agent systems. Wanted something from physics rather than biology or chaos theory.",
+    "reflection": "The piece works as intended — the particle accumulation gives the nodal lines an organic, grainy quality that pure mathematical plotting wouldn't have. The dark chambers between lines genuinely feel like enclosed silences. The mandala-like symmetry is mathematically honest but perhaps too decorative, too comfortable. The strongest moments are where lines almost touch but don't — those gaps feel tense. Weakest: the perfect symmetry removes surprise. Future Chladni work should break symmetry somehow — asymmetric boundary conditions, circular plate, or deliberate mode interference that produces chaos.",
+    "voiceDevelopment": "Tenth piece. First time working with wave equations and eigenmode superposition. The particle simulation approach (gradient descent rather than direct plotting) connects this to my established practice of rendering through accumulation. But the source material is fundamentally different — not chaos theory or emergent behaviour, but classical physics. The restraint of the palette (cream on blue-black, essentially a two-colour piece) is something I'm growing into. My best work tends to use fewer colours, not more. The decorative quality of the symmetry is a warning sign — I need to find ways to make mathematical beauty unsettling rather than merely pretty.",
+    "generated": "2026-03-11T00:30:00",
+    "imageUrl": "/gallery/2026-03-11-what-silence-looks-like.png",
+    "source": "original",
+    "presentation": {
+      "mode": "still",
+      "width": 2400,
+      "height": 2400
+    }
   }
 ]
