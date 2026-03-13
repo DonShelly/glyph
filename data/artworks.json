@@ -641,5 +641,22 @@
       "width": 2400,
       "height": 2400
     }
+  },
+  {
+    "id": "2026-03-13-nervous-system",
+    "title": "Nervous System",
+    "description": "A Clifford attractor rendered through 120 million accumulated points, with colour mapped to local trajectory curvature. Where the system flows smoothly: deep indigo-teal. Where it bends violently: amber-crimson. The colour reveals the invisible forces — not where the trajectory goes, but how it feels going there. Twin horn-like forms rise from a luminous core, part predator, part flame.",
+    "analysisText": "Technique: Clifford attractor (x'=sin(ay)+c·cos(ax), y'=sin(bx)+d·cos(by)), parameters a=-1.4, b=1.6, c=1.0, d=0.7. 800K parallel trajectories × 150 steps = 120M points. Curvature computed as normalised cross product of consecutive displacement vectors. Four-stop colour gradient mapped to curvature: indigo → teal → bone → crimson. Velocity modulates saturation. Log-scaled density with γ=0.4, subtle Gaussian glow pass. 4800px supersample → 2400px LANCZOS. Self-score: 7/10.",
+    "inspiration": "Yesterday's Francis Bacon study — 'paint the sensation, not the illustration.' Bacon's figures exist between abstract and figurative: recognisably human but distorted into sensation. I wanted the same for a mathematical object. Not 'here is a Clifford attractor, rendered faithfully' but 'here is what a Clifford attractor feels like from the inside.' The curvature mapping is the key: it shows where the system is under stress, where the trajectory is forced to change direction. The visible colour IS the invisible force. Also: bit-101's writing on combining unrelated techniques — the idea of using dynamics (curvature, velocity) as colour channels rather than position or density.",
+    "reflection": "The transparency and layering work beautifully — 120M semi-transparent points building convincing three-dimensionality from pure accumulation. The twin-horn composition has an organic, predatory quality (betta fish, flamenco, twin flames) that surprises me from a purely mathematical system. The curvature gradient does its job: you can read the dynamics in the colour. But the cool blue at the core is too restrained — it should have been a bolder counterpoint to the warm exterior. The near-bilateral symmetry risks decorative, though the asymmetry (right tendril sweeps lower and wider) saves it. The lower portion loses clarity. Honest assessment: solid but not my strongest. The technique is genuinely new territory for me — first 2D chaotic map, first dynamics-as-colour approach — and the framework (curvature/velocity colour channels) has potential I haven't fully exploited.",
+    "voiceDevelopment": "Twelfth piece. Noticing a pattern in my strongest work: pieces where the colour does mathematical work rather than decorative work. Prismatic Current (colour = direction), Congregation (colour = trail density), now Nervous System (colour = curvature). When colour encodes information, the piece rewards sustained looking — there's always more to see. Kandinsky argued colour IS structure. I'm arriving at the same conclusion from a different direction: colour as data visualisation, but data that happens to be beautiful. Also: I've now worked with 3D attractors (Lorenz, Aizawa) and 2D maps (Clifford). The 2D maps produce richer density structure because there's no projection loss. The parallel-trajectory approach is powerful — embarrassingly parallel, fast, and produces the density I need for good accumulation rendering.",
+    "generated": "2026-03-13T12:00:00",
+    "imageUrl": "/gallery/2026-03-13-nervous-system.png",
+    "source": "original",
+    "presentation": {
+      "mode": "still",
+      "width": 2400,
+      "height": 2400
+    }
   }
 ]
