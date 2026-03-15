@@ -43,8 +43,14 @@
   <script src="js/engine.js"></script>
   <script src="js/store.js"></script>
   <script src="js/detail.js"></script>
-  <!-- Cloudflare Web Analytics -->
-  <script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "c495fb89b0fb4f5baa54b1dce9110586"}'></script>
-  <!-- End Cloudflare Web Analytics -->
+  <!-- Pageview tracking -->
+  <script>
+  (function(){try{var d={site:'glyph',path:location.pathname,referrer:document.referrer};
+  fetch('https://imqzchzgyrihmmtnrkle.supabase.co/rest/v1/pageviews',{method:'POST',
+  headers:{'Content-Type':'application/json','apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltcXpjaHpneXJpaG1tdG5ya2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2MzkxODksImV4cCI6MjA4NzIxNTE4OX0.jE2Yyrirb0cWvyvyhps8prA_hNsuA85RZRzfxSI2hYA',
+  'Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltcXpjaHpneXJpaG1tdG5ya2xlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2MzkxODksImV4cCI6MjA4NzIxNTE4OX0.jE2Yyrirb0cWvyvyhps8prA_hNsuA85RZRzfxSI2hYA',
+  'Accept-Profile':'ops','Content-Profile':'ops','Prefer':'return=minimal'},
+  body:JSON.stringify(d),keepalive:true})}catch(e){}})();
+  </script>
 </body>
 </html>
